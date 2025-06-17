@@ -1,28 +1,72 @@
 """Builder API implementation for multi-step workflows."""
 
-from typing import Any, Dict, Optional
+import json
+from typing import Any, Dict, List, Optional, Union
+
+from nutrient.file_handler import FileInput, prepare_file_for_upload, save_file_output
 
 
 class BuildAPIWrapper:
-    """Builder pattern implementation for chaining document operations."""
+    """Builder pattern implementation for chaining document operations.
+    
+    This class provides a fluent interface for building complex document
+    processing workflows using the Nutrient Build API.
+    
+    Example:
+        >>> client.build(input_file="document.pdf") \\
+        ...     .add_step(tool="rotate-pages", options={"degrees": 90}) \\
+        ...     .add_step(tool="ocr-pdf", options={"language": "en"}) \\
+        ...     .add_step(tool="watermark-pdf", options={"text": "CONFIDENTIAL"}) \\
+        ...     .execute(output_path="processed.pdf")
+    """
 
-    def __init__(self, client, input_file) -> None:
-        """Initialize builder with client and input file."""
+    def __init__(self, client, input_file: FileInput) -> None:
+        """Initialize builder with client and input file.
+        
+        Args:
+            client: NutrientClient instance.
+            input_file: Input file to process.
+        """
         self._client = client
         self._input_file = input_file
-        self._steps: list[Dict[str, Any]] = []
+        self._parts: List[Dict[str, Any]] = []
+        self._actions: List[Dict[str, Any]] = []
+        self._output_options: Dict[str, Any] = {}
 
     def add_step(self, tool: str, options: Optional[Dict[str, Any]] = None) -> "BuildAPIWrapper":
         """Add a processing step to the workflow.
 
         Args:
-            tool: Tool identifier from the API.
+            tool: Tool identifier (e.g., 'rotate-pages', 'ocr-pdf').
             options: Optional parameters for the tool.
 
         Returns:
             Self for method chaining.
+            
+        Example:
+            >>> builder.add_step(tool="rotate-pages", options={"degrees": 180})
         """
-        raise NotImplementedError("Builder API not yet implemented")
+        action = self._map_tool_to_action(tool, options or {})
+        self._actions.append(action)
+        return self
+
+    def set_output_options(self, **options: Any) -> "BuildAPIWrapper":
+        """Set output options for the final document.
+        
+        Args:
+            **options: Output options (e.g., metadata, optimization).
+            
+        Returns:
+            Self for method chaining.
+            
+        Example:
+            >>> builder.set_output_options(
+        ...     metadata={"title": "My Document", "author": "John Doe"},
+        ...     optimize=True
+        ... )
+        """
+        self._output_options.update(options)
+        return self
 
     def execute(self, output_path: Optional[str] = None) -> Optional[bytes]:
         """Execute the workflow.
@@ -32,5 +76,115 @@ class BuildAPIWrapper:
 
         Returns:
             Processed file bytes, or None if output_path is provided.
+            
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
         """
-        raise NotImplementedError("Builder API not yet implemented")
+        # Prepare the build instructions
+        instructions = self._build_instructions()
+        
+        # Prepare file for upload
+        file_field, file_data = prepare_file_for_upload(self._input_file)
+        files = {file_field: file_data}
+        
+        # Make API request
+        result = self._client._http_client.post(
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+        
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result
+
+    def _build_instructions(self) -> Dict[str, Any]:
+        """Build the instructions payload for the API.
+        
+        Returns:
+            Instructions dictionary for the Build API.
+        """
+        # Add the input file as the first part
+        instructions = {
+            "parts": [
+                {"file": "file"}  # Reference to the uploaded file
+            ],
+            "actions": self._actions,
+        }
+        
+        # Add output options if specified
+        if self._output_options:
+            instructions["output"] = self._output_options
+            
+        return instructions
+
+    def _map_tool_to_action(self, tool: str, options: Dict[str, Any]) -> Dict[str, Any]:
+        """Map tool name and options to Build API action format.
+        
+        Args:
+            tool: Tool identifier.
+            options: Tool options.
+            
+        Returns:
+            Action dictionary for the Build API.
+        """
+        # Map tool names to action types
+        tool_mapping = {
+            "rotate-pages": "rotate",
+            "ocr-pdf": "ocr",
+            "watermark-pdf": "watermark",
+            "flatten-annotations": "flatten",
+            "apply-instant-json": "applyInstantJson",
+            "apply-xfdf": "applyXfdf",
+            "create-redactions": "createRedactions",
+            "apply-redactions": "applyRedactions",
+        }
+        
+        action_type = tool_mapping.get(tool, tool)
+        
+        # Build action dictionary
+        action = {"type": action_type}
+        
+        # Handle special cases for different action types
+        if action_type == "rotate":
+            action["rotateBy"] = options.get("degrees", 0)
+            if "page_indexes" in options:
+                action["pageIndexes"] = options["page_indexes"]
+                
+        elif action_type == "ocr":
+            if "language" in options:
+                action["language"] = options["language"]
+                
+        elif action_type == "watermark":
+            if "text" in options:
+                action["text"] = options["text"]
+            if "image_url" in options:
+                action["image"] = {"url": options["image_url"]}
+            if "opacity" in options:
+                action["opacity"] = options["opacity"]
+            if "position" in options:
+                action["position"] = options["position"]
+                
+        else:
+            # For other actions, pass options directly
+            action.update(options)
+            
+        return action
+
+    def __str__(self) -> str:
+        """String representation of the build workflow."""
+        steps = [f"{action['type']}" for action in self._actions]
+        return f"BuildAPIWrapper(steps={steps})"
+
+    def __repr__(self) -> str:
+        """Detailed representation of the build workflow."""
+        return (
+            f"BuildAPIWrapper("
+            f"input_file={self._input_file!r}, "
+            f"actions={self._actions!r}, "
+            f"output_options={self._output_options!r})"
+        )
