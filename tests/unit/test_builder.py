@@ -48,10 +48,7 @@ class TestBuildAPIWrapper:
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
 
-        builder.add_step(
-            tool="rotate-pages",
-            options={"degrees": 180, "page_indexes": [0, 2, 4]}
-        )
+        builder.add_step(tool="rotate-pages", options={"degrees": 180, "page_indexes": [0, 2, 4]})
 
         assert builder._actions[0] == {
             "type": "rotate",
@@ -82,7 +79,7 @@ class TestBuildAPIWrapper:
                 "text": "CONFIDENTIAL",
                 "opacity": 0.3,
                 "position": "top-right",
-            }
+            },
         )
 
         assert builder._actions[0] == {
@@ -100,8 +97,7 @@ class TestBuildAPIWrapper:
         builder = BuildAPIWrapper(mock_client, "test.pdf")
 
         builder.add_step(
-            tool="watermark-pdf",
-            options={"image_url": "https://example.com/logo.png"}
+            tool="watermark-pdf", options={"image_url": "https://example.com/logo.png"}
         )
 
         assert builder._actions[0] == {
@@ -128,9 +124,9 @@ class TestBuildAPIWrapper:
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
 
-        builder.add_step(tool="rotate-pages", options={"degrees": 90}) \
-               .add_step(tool="ocr-pdf") \
-               .add_step(tool="watermark-pdf", options={"text": "DRAFT"})
+        builder.add_step(tool="rotate-pages", options={"degrees": 90}).add_step(
+            tool="ocr-pdf"
+        ).add_step(tool="watermark-pdf", options={"text": "DRAFT"})
 
         assert len(builder._actions) == 3
         assert builder._actions[0]["type"] == "rotate"

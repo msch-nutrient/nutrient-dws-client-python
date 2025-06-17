@@ -1,6 +1,5 @@
 """Unit tests for custom exceptions."""
 
-
 from nutrient_dws.exceptions import (
     APIError,
     AuthenticationError,
@@ -74,7 +73,10 @@ class TestAPIError:
         assert exc.status_code == 500
         assert exc.response_body == '{"error": "Internal server error"}'
         assert exc.request_id == "req-123"
-        assert str(exc) == 'Server error | Status: 500 | Request ID: req-123 | Response: {"error": "Internal server error"}'
+        assert (
+            str(exc)
+            == 'Server error | Status: 500 | Request ID: req-123 | Response: {"error": "Internal server error"}'
+        )
 
     def test_error_string_no_message(self):
         """Test string representation when no message provided."""

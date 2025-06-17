@@ -59,7 +59,7 @@ class NutrientClient(DirectAPIMixin):
 
         Returns:
             BuildAPIWrapper instance for chaining operations.
-            
+
         Example:
             >>> builder = client.build(input_file="document.pdf")
             >>> builder.add_step(tool="rotate-pages", options={"degrees": 90})
@@ -75,19 +75,19 @@ class NutrientClient(DirectAPIMixin):
         **options: Any,
     ) -> Optional[bytes]:
         """Process a file using the Direct API.
-        
+
         This is the internal method used by all Direct API methods.
         It internally uses the Build API with a single action.
-        
+
         Args:
             tool: The tool identifier from the API.
             input_file: Input file to process.
             output_path: Optional path to save the output.
             **options: Tool-specific options.
-            
+
         Returns:
             Processed file as bytes, or None if output_path is provided.
-            
+
         Raises:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.

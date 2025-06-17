@@ -18,7 +18,7 @@ class HTTPClient:
 
     def __init__(self, api_key: Optional[str], timeout: int = 300) -> None:
         """Initialize HTTP client with authentication.
-        
+
         Args:
             api_key: API key for authentication.
             timeout: Request timeout in seconds.
@@ -61,13 +61,13 @@ class HTTPClient:
 
     def _handle_response(self, response: requests.Response) -> bytes:
         """Handle API response and raise appropriate exceptions.
-        
+
         Args:
             response: Response from the API.
-            
+
         Returns:
             Response content as bytes.
-            
+
         Raises:
             AuthenticationError: For 401/403 responses.
             ValidationError: For 422 responses.
@@ -129,7 +129,7 @@ class HTTPClient:
 
         Returns:
             Response content as bytes.
-            
+
         Raises:
             AuthenticationError: If API key is missing or invalid.
             TimeoutError: If request times out.

@@ -11,7 +11,7 @@ class NutrientError(Exception):
 
 class AuthenticationError(NutrientError):
     """Raised when authentication fails (401/403 errors).
-    
+
     This typically indicates:
     - Missing API key
     - Invalid API key

@@ -220,6 +220,7 @@ class TestGetFileSize:
 
     def test_non_seekable_file_size(self):
         """Test getting size of non-seekable object."""
+
         # Mock a non-seekable object
         class NonSeekable:
             def read(self):

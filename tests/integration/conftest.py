@@ -31,11 +31,11 @@ def pytest_addoption(parser):
         "--unit-only",
         action="store_true",
         default=False,
-        help="Run only unit tests, skip integration tests"
+        help="Run only unit tests, skip integration tests",
     )
     parser.addoption(
         "--integration-only",
         action="store_true",
         default=False,
-        help="Run only integration tests, skip unit tests"
+        help="Run only integration tests, skip unit tests",
     )

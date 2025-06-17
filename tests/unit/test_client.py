@@ -79,15 +79,13 @@ class TestNutrientClient:
             # Mock prepare_file_for_upload to avoid file not found
             with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
                 mock_prepare.return_value = ("file", ("input.pdf", b"content", "application/pdf"))
-                
+
                 # Also need to mock save_file_output
                 with patch("nutrient_dws.builder.save_file_output") as mock_save:
                     result = client._process_file(
-                        "test-tool",
-                        "input.pdf",
-                        output_path=str(output_file)
+                        "test-tool", "input.pdf", output_path=str(output_file)
                     )
-                    
+
                     # Verify save was called with the right arguments
                     mock_save.assert_called_once_with(b"PDF content", str(output_file))
 
@@ -112,9 +110,16 @@ class TestNutrientClient:
 
         with patch.object(client._http_client, "post") as mock_post:
             mock_post.return_value = b"PDF content"
-            
+
             with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
-                mock_prepare.return_value = ("file", ("document.docx", b"content", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                mock_prepare.return_value = (
+                    "file",
+                    (
+                        "document.docx",
+                        b"content",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    ),
+                )
 
                 result = client.convert_to_pdf("document.docx")
 
@@ -131,17 +136,9 @@ class TestNutrientClient:
         with patch.object(client, "_process_file") as mock_process:
             mock_process.return_value = b"Rotated PDF"
 
-            result = client.rotate_pages(
-                "input.pdf",
-                degrees=90,
-                page_indexes=[0, 1, 2]
-            )
+            result = client.rotate_pages("input.pdf", degrees=90, page_indexes=[0, 1, 2])
 
             mock_process.assert_called_once_with(
-                "rotate-pages",
-                "input.pdf",
-                None,
-                degrees=90,
-                page_indexes=[0, 1, 2]
+                "rotate-pages", "input.pdf", None, degrees=90, page_indexes=[0, 1, 2]
             )
             assert result == b"Rotated PDF"

@@ -4,26 +4,40 @@ This file provides convenient methods that wrap the Nutrient Build API
 for supported document processing operations.
 """
 
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, Protocol, cast
 
 from nutrient_dws.file_handler import FileInput
 
 if TYPE_CHECKING:
-    from nutrient_dws.client import NutrientClient
+    from nutrient_dws.builder import BuildAPIWrapper
+    from nutrient_dws.http_client import HTTPClient
+
+
+class HasBuildMethod(Protocol):
+    """Protocol for objects that have a build method."""
+    
+    def build(self, input_file: FileInput) -> "BuildAPIWrapper":
+        """Build method signature."""
+        ...
+    
+    @property
+    def _http_client(self) -> "HTTPClient":
+        """HTTP client property."""
+        ...
 
 
 class DirectAPIMixin:
     """Mixin class containing Direct API methods.
-    
+
     These methods provide a simplified interface to common document
     processing operations. They internally use the Build API.
-    
+
     Note: The API automatically converts supported document formats
     (DOCX, XLSX, PPTX) to PDF when processing.
     """
 
     def _process_file(
-        self: "NutrientClient",
+        self,
         tool: str,
         input_file: FileInput,
         output_path: Optional[str] = None,
@@ -40,7 +54,7 @@ class DirectAPIMixin:
         """Convert a document to PDF.
 
         Converts Office documents (DOCX, XLSX, PPTX) to PDF format.
-        This uses the API's implicit conversion - simply uploading a 
+        This uses the API's implicit conversion - simply uploading a
         non-PDF document returns it as a PDF.
 
         Args:
@@ -53,12 +67,14 @@ class DirectAPIMixin:
         Raises:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors (e.g., unsupported format).
-            
+
         Note:
             HTML files are not currently supported by the API.
         """
         # Use builder with no actions - implicit conversion happens
-        return self.build(input_file).execute(output_path)  # type: ignore
+        if TYPE_CHECKING:
+            self = cast(HasBuildMethod, self)
+        return self.build(input_file).execute(output_path)
 
     def flatten_annotations(
         self, input_file: FileInput, output_path: Optional[str] = None
@@ -120,7 +136,7 @@ class DirectAPIMixin:
         """Apply OCR to a PDF to make it searchable.
 
         Performs optical character recognition on the PDF to extract text
-        and make it searchable. If input is an Office document, it will 
+        and make it searchable. If input is an Office document, it will
         be converted to PDF first.
 
         Args:
@@ -199,7 +215,7 @@ class DirectAPIMixin:
         """Apply redaction annotations to permanently remove content.
 
         Applies any redaction annotations in the PDF to permanently remove
-        the underlying content. If input is an Office document, it will 
+        the underlying content. If input is an Office document, it will
         be converted to PDF first.
 
         Args:
@@ -216,14 +232,14 @@ class DirectAPIMixin:
         return self._process_file("apply-redactions", input_file, output_path)
 
     def merge_pdfs(
-        self: "NutrientClient",
+        self,
         input_files: List[FileInput],
         output_path: Optional[str] = None,
     ) -> Optional[bytes]:
         """Merge multiple PDF files into one.
 
         Combines multiple files into a single PDF in the order provided.
-        Office documents (DOCX, XLSX, PPTX) will be automatically converted 
+        Office documents (DOCX, XLSX, PPTX) will be automatically converted
         to PDF before merging.
 
         Args:
@@ -237,7 +253,7 @@ class DirectAPIMixin:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
             ValueError: If less than 2 files provided.
-            
+
         Example:
             # Merge PDFs and Office documents
             client.merge_pdfs([
@@ -262,12 +278,11 @@ class DirectAPIMixin:
             parts.append({"file": field_name})
 
         # Build instructions for merge (no actions needed)
-        instructions = {
-            "parts": parts,
-            "actions": []
-        }
+        instructions = {"parts": parts, "actions": []}
 
         # Make API request
+        if TYPE_CHECKING:
+            self = cast(HasBuildMethod, self)
         result = self._http_client.post(
             "/build",
             files=files,

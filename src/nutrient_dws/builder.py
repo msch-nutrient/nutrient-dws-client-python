@@ -21,7 +21,7 @@ class BuildAPIWrapper:
 
     def __init__(self, client: Any, input_file: FileInput) -> None:
         """Initialize builder with client and input file.
-        
+
         Args:
             client: NutrientClient instance.
             input_file: Input file to process.
@@ -35,7 +35,7 @@ class BuildAPIWrapper:
 
     def _add_file_part(self, file: FileInput, name: str) -> None:
         """Add an additional file part for operations like merge.
-        
+
         Args:
             file: File to add.
             name: Name for the file part.
@@ -52,7 +52,7 @@ class BuildAPIWrapper:
 
         Returns:
             Self for method chaining.
-            
+
         Example:
             >>> builder.add_step(tool="rotate-pages", options={"degrees": 180})
         """
@@ -62,13 +62,13 @@ class BuildAPIWrapper:
 
     def set_output_options(self, **options: Any) -> "BuildAPIWrapper":
         """Set output options for the final document.
-        
+
         Args:
             **options: Output options (e.g., metadata, optimization).
-            
+
         Returns:
             Self for method chaining.
-            
+
         Example:
             >>> builder.set_output_options(
         ...     metadata={"title": "My Document", "author": "John Doe"},
@@ -86,7 +86,7 @@ class BuildAPIWrapper:
 
         Returns:
             Processed file bytes, or None if output_path is provided.
-            
+
         Raises:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
@@ -116,7 +116,7 @@ class BuildAPIWrapper:
 
     def _build_instructions(self) -> Dict[str, Any]:
         """Build the instructions payload for the API.
-        
+
         Returns:
             Instructions dictionary for the Build API.
         """
@@ -133,11 +133,11 @@ class BuildAPIWrapper:
 
     def _map_tool_to_action(self, tool: str, options: Dict[str, Any]) -> Dict[str, Any]:
         """Map tool name and options to Build API action format.
-        
+
         Args:
             tool: Tool identifier.
             options: Tool options.
-            
+
         Returns:
             Action dictionary for the Build API.
         """
