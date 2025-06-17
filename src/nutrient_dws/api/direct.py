@@ -15,11 +15,11 @@ if TYPE_CHECKING:
 
 class HasBuildMethod(Protocol):
     """Protocol for objects that have a build method."""
-    
+
     def build(self, input_file: FileInput) -> "BuildAPIWrapper":
         """Build method signature."""
         ...
-    
+
     @property
     def _http_client(self) -> "HTTPClient":
         """HTTP client property."""
@@ -72,9 +72,8 @@ class DirectAPIMixin:
             HTML files are not currently supported by the API.
         """
         # Use builder with no actions - implicit conversion happens
-        if TYPE_CHECKING:
-            self = cast(HasBuildMethod, self)
-        return self.build(input_file).execute(output_path)
+        # Type checking: at runtime, self is NutrientClient which has these methods
+        return self.build(input_file).execute(output_path)  # type: ignore[attr-defined,no-any-return]
 
     def flatten_annotations(
         self, input_file: FileInput, output_path: Optional[str] = None
@@ -281,9 +280,8 @@ class DirectAPIMixin:
         instructions = {"parts": parts, "actions": []}
 
         # Make API request
-        if TYPE_CHECKING:
-            self = cast(HasBuildMethod, self)
-        result = self._http_client.post(
+        # Type checking: at runtime, self is NutrientClient which has _http_client
+        result = self._http_client.post(  # type: ignore[attr-defined]
             "/build",
             files=files,
             json_data=instructions,
@@ -294,4 +292,4 @@ class DirectAPIMixin:
             save_file_output(result, output_path)
             return None
         else:
-            return result
+            return result  # type: ignore[no-any-return]

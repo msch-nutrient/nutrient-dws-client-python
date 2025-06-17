@@ -6,11 +6,11 @@ from nutrient_dws.file_handler import FileInput, prepare_file_for_upload, save_f
 
 
 class BuildAPIWrapper:
-    """Builder pattern implementation for chaining document operations.
-    
+    r"""Builder pattern implementation for chaining document operations.
+
     This class provides a fluent interface for building complex document
     processing workflows using the Nutrient Build API.
-    
+
     Example:
         >>> client.build(input_file="document.pdf") \\
         ...     .add_step(tool="rotate-pages", options={"degrees": 90}) \\

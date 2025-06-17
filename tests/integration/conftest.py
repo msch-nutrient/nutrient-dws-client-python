@@ -1,6 +1,5 @@
 """Configuration for integration tests."""
 
-import os
 
 import pytest
 

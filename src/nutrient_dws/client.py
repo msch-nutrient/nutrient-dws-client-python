@@ -10,13 +10,13 @@ from nutrient_dws.http_client import HTTPClient
 
 
 class NutrientClient(DirectAPIMixin):
-    """Main client for interacting with Nutrient DWS API.
-    
+    r"""Main client for interacting with Nutrient DWS API.
+
     This client provides two ways to interact with the API:
-    
+
     1. Direct API: Individual method calls for single operations
        Example: client.convert_to_pdf(input_file="document.docx")
-    
+
     2. Builder API: Fluent interface for chaining multiple operations
        Example: client.build(input_file="doc.docx").add_step("convert-to-pdf").execute()
 
@@ -24,10 +24,10 @@ class NutrientClient(DirectAPIMixin):
         api_key: API key for authentication. If not provided, will look for
             NUTRIENT_API_KEY environment variable.
         timeout: Request timeout in seconds. Defaults to 300.
-            
+
     Raises:
         AuthenticationError: When making API calls without a valid API key.
-        
+
     Example:
         >>> from nutrient_dws import NutrientClient
         >>> client = NutrientClient(api_key="your-api-key")

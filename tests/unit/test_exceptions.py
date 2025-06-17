@@ -73,10 +73,11 @@ class TestAPIError:
         assert exc.status_code == 500
         assert exc.response_body == '{"error": "Internal server error"}'
         assert exc.request_id == "req-123"
-        assert (
-            str(exc)
-            == 'Server error | Status: 500 | Request ID: req-123 | Response: {"error": "Internal server error"}'
+        expected = (
+            'Server error | Status: 500 | Request ID: req-123 | '
+            'Response: {"error": "Internal server error"}'
         )
+        assert str(exc) == expected
 
     def test_error_string_no_message(self):
         """Test string representation when no message provided."""

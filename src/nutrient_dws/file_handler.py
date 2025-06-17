@@ -80,7 +80,9 @@ def prepare_file_for_upload(
         # For large files, return file handle instead of reading into memory
         file_size = path.stat().st_size
         if file_size > 10 * 1024 * 1024:  # 10MB threshold
-            file_handle = open(path, "rb")
+            # Note: File handle is intentionally not using context manager
+            # as it needs to remain open for streaming upload by HTTP client
+            file_handle = open(path, "rb")  # noqa: SIM115
             return field_name, (path.name, file_handle, content_type)
         else:
             return field_name, (path.name, path.read_bytes(), content_type)

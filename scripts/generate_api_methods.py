@@ -35,7 +35,7 @@ def get_python_type(schema: Dict[str, Any]) -> str:
 
 def create_manual_tools() -> List[Dict[str, Any]]:
     """Create tool definitions based on the specification documentation.
-    
+
     Since the Nutrient API uses a build endpoint with actions rather than
     individual tool endpoints, we'll create convenience methods that wrap
     the build API.
@@ -90,7 +90,10 @@ def create_manual_tools() -> List[Dict[str, Any]]:
                 "page_indexes": {
                     "type": "List[int]",
                     "required": False,
-                    "description": "List of page indexes to rotate (0-based). If not specified, all pages are rotated.",
+                    "description": (
+                        "List of page indexes to rotate (0-based). "
+                        "If not specified, all pages are rotated."
+                    ),
                 },
             },
         },
@@ -245,10 +248,7 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
         if not param_info["required"]:
             param_type = param_info["type"]
             # Handle List types
-            if param_type.startswith("List["):
-                base_type = param_type
-            else:
-                base_type = param_type
+            base_type = param_type
 
             default = param_info.get("default")
             if default is None:
@@ -263,7 +263,9 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
     # Build method signature
     if len(param_list) > 3:  # Multiple parameters
         params_str = ",\n        ".join(param_list)
-        method_signature = f"    def {method_name}(\n        {params_str},\n    ) -> Optional[bytes]:"
+        method_signature = (
+            f"    def {method_name}(\n        {params_str},\n    ) -> Optional[bytes]:"
+        )
     else:
         params_str = ", ".join(param_list)
         method_signature = f"    def {method_name}({params_str}) -> Optional[bytes]:"
@@ -274,48 +276,56 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
         docstring_lines.append("")
         docstring_lines.append(f"        {description}")
 
-    docstring_lines.extend([
-        "",
-        "        Args:",
-        "            input_file: Input file (path, bytes, or file-like object).",
-    ])
+    docstring_lines.extend(
+        [
+            "",
+            "        Args:",
+            "            input_file: Input file (path, bytes, or file-like object).",
+        ]
+    )
 
     if param_docs:
         docstring_lines.extend(param_docs)
 
-    docstring_lines.extend([
-        "            output_path: Optional path to save the output file.",
-        "",
-        "        Returns:",
-        "            Processed file as bytes, or None if output_path is provided.",
-        "",
-        "        Raises:",
-        "            AuthenticationError: If API key is missing or invalid.",
-        "            APIError: For other API errors.",
-        '        """',
-    ])
+    docstring_lines.extend(
+        [
+            "            output_path: Optional path to save the output file.",
+            "",
+            "        Returns:",
+            "            Processed file as bytes, or None if output_path is provided.",
+            "",
+            "        Raises:",
+            "            AuthenticationError: If API key is missing or invalid.",
+            "            APIError: For other API errors.",
+            '        """',
+        ]
+    )
 
     # Build method body
     method_body = []
 
     # Collect kwargs
-    kwargs_params = [
-        f"{name}={name}"
-        for name in parameters.keys()
-    ]
+    kwargs_params = [f"{name}={name}" for name in parameters]
 
     if kwargs_params:
         kwargs_str = ", ".join(kwargs_params)
-        method_body.append(f'        return self._process_file("{tool_name}", input_file, output_path, {kwargs_str})')
+        method_body.append(
+            f'        return self._process_file("{tool_name}", input_file, '
+            f"output_path, {kwargs_str})"
+        )
     else:
-        method_body.append(f'        return self._process_file("{tool_name}", input_file, output_path)')
+        method_body.append(
+            f'        return self._process_file("{tool_name}", input_file, output_path)'
+        )
 
     # Combine all parts
-    return "\n".join([
-        method_signature,
-        "\n".join(docstring_lines),
-        "\n".join(method_body),
-    ])
+    return "\n".join(
+        [
+            method_signature,
+            "\n".join(docstring_lines),
+            "\n".join(method_body),
+        ]
+    )
 
 
 def generate_api_methods(spec_path: Path, output_path: Path) -> None:
@@ -330,23 +340,23 @@ def generate_api_methods(spec_path: Path, output_path: Path) -> None:
     # Generate code
     code_lines = [
         '"""Direct API methods for individual document processing tools.',
-        '',
-        'This file provides convenient methods that wrap the Nutrient Build API',
-        'for common document processing operations.',
+        "",
+        "This file provides convenient methods that wrap the Nutrient Build API",
+        "for common document processing operations.",
         '"""',
-        '',
-        'from typing import List, Optional',
-        '',
-        'from nutrient_dws.file_handler import FileInput',
-        '',
-        '',
-        'class DirectAPIMixin:',
+        "",
+        "from typing import List, Optional",
+        "",
+        "from nutrient_dws.file_handler import FileInput",
+        "",
+        "",
+        "class DirectAPIMixin:",
         '    """Mixin class containing Direct API methods.',
-        '    ',
-        '    These methods provide a simplified interface to common document',
-        '    processing operations. They internally use the Build API.',
+        "    ",
+        "    These methods provide a simplified interface to common document",
+        "    processing operations. They internally use the Build API.",
         '    """',
-        '',
+        "",
     ]
 
     # Add methods

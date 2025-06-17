@@ -6,13 +6,11 @@ Set NUTRIENT_API_KEY environment variable to run these tests.
 
 import os
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
 from nutrient_dws import NutrientClient
 from nutrient_dws.exceptions import AuthenticationError
-
 
 # Skip integration tests if no API key is provided
 pytestmark = pytest.mark.skipif(
@@ -39,7 +37,9 @@ endobj
 << /Type /Pages /Kids [3 0 R] /Count 1 >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /MediaBox [0 0 612 792] /Contents 4 0 R >>
+<< /Type /Page /Parent 2 0 R /Resources
+<< /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>
+/MediaBox [0 0 612 792] /Contents 4 0 R >>
 endobj
 4 0 obj
 << /Length 44 >>
@@ -53,11 +53,11 @@ endstream
 endobj
 xref
 0 5
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000323 00000 n 
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000323 00000 n
 trailer
 << /Size 5 /Root 1 0 R >>
 startxref
@@ -81,9 +81,11 @@ def sample_docx(tmp_path: Path) -> Path:
             "[Content_Types].xml",
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-    <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Default Extension="rels"
+        ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
     <Default Extension="xml" ContentType="application/xml"/>
-    <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+    <Override PartName="/word/document.xml"
+        ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 </Types>""",
         )
 
@@ -91,7 +93,9 @@ def sample_docx(tmp_path: Path) -> Path:
             "_rels/.rels",
             """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+    <Relationship Id="rId1"
+        Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+        Target="word/document.xml"/>
 </Relationships>""",
         )
 
@@ -292,7 +296,9 @@ class TestErrorHandling:
         invalid_file = tmp_path / "invalid.txt"
         invalid_file.write_text("This is not a PDF")
 
-        with pytest.raises(Exception):  # API should return an error
+        from nutrient_dws.exceptions import APIError
+
+        with pytest.raises(APIError):  # API should return an error
             client.rotate_pages(input_file=invalid_file, degrees=90)
 
     def test_missing_file(self, client: NutrientClient) -> None:
