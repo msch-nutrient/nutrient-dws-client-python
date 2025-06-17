@@ -5,7 +5,6 @@ from typing import Any, Optional
 
 from nutrient.api.direct import DirectAPIMixin
 from nutrient.builder import BuildAPIWrapper
-from nutrient.exceptions import AuthenticationError
 from nutrient.file_handler import FileInput, prepare_file_for_upload, save_file_output
 from nutrient.http_client import HTTPClient
 
@@ -46,10 +45,10 @@ class NutrientClient(DirectAPIMixin):
         # Get API key from parameter or environment
         self._api_key = api_key or os.environ.get("NUTRIENT_API_KEY")
         self._timeout = timeout
-        
+
         # Initialize HTTP client
         self._http_client = HTTPClient(api_key=self._api_key, timeout=timeout)
-        
+
         # Direct API methods will be added dynamically
 
     def build(self, input_file: FileInput) -> BuildAPIWrapper:
@@ -67,7 +66,7 @@ class NutrientClient(DirectAPIMixin):
             >>> result = builder.execute()
         """
         return BuildAPIWrapper(client=self, input_file=input_file)
-    
+
     def _process_file(
         self,
         tool: str,
@@ -95,29 +94,29 @@ class NutrientClient(DirectAPIMixin):
         # Prepare file for upload
         file_field, file_data = prepare_file_for_upload(input_file)
         files = {file_field: file_data}
-        
+
         # Prepare form data with options
         data = {k: str(v) for k, v in options.items() if v is not None}
-        
+
         # Make API request
         endpoint = f"/process/{tool}"
         result = self._http_client.post(endpoint, files=files, data=data)
-        
+
         # Handle output
         if output_path:
             save_file_output(result, output_path)
             return None
         else:
             return result
-    
+
     def close(self) -> None:
         """Close the HTTP client session."""
         self._http_client.close()
-    
+
     def __enter__(self) -> "NutrientClient":
         """Context manager entry."""
         return self
-    
+
     def __exit__(self, *args: Any) -> None:
         """Context manager exit."""
         self.close()

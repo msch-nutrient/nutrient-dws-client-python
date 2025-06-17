@@ -3,9 +3,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
-
-import yaml
+from typing import Any, Dict, List
 
 
 def to_snake_case(name: str) -> str:
@@ -21,7 +19,7 @@ def get_python_type(schema: Dict[str, Any]) -> str:
     """Convert OpenAPI schema type to Python type hint."""
     if not schema:
         return "Any"
-    
+
     type_mapping = {
         "string": "str",
         "integer": "int",
@@ -30,7 +28,7 @@ def get_python_type(schema: Dict[str, Any]) -> str:
         "array": "List[Any]",
         "object": "Dict[str, Any]",
     }
-    
+
     schema_type = schema.get("type", "string")
     return type_mapping.get(schema_type, "Any")
 
@@ -213,7 +211,7 @@ def create_manual_tools() -> List[Dict[str, Any]]:
             },
         },
     ]
-    
+
     return tools
 
 
@@ -224,11 +222,11 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
     summary = tool_info["summary"]
     description = tool_info["description"]
     parameters = tool_info["parameters"]
-    
+
     # Build parameter list
     param_list = ["self", "input_file: FileInput"]
     param_docs = []
-    
+
     # Add required parameters first
     for param_name, param_info in parameters.items():
         if param_info["required"]:
@@ -238,10 +236,10 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
                 param_type = "'FileInput'"  # Forward reference
             param_list.append(f"{param_name}: {param_type}")
             param_docs.append(f"        {param_name}: {param_info['description']}")
-    
+
     # Always add output_path
     param_list.append("output_path: Optional[str] = None")
-    
+
     # Add optional parameters
     for param_name, param_info in parameters.items():
         if not param_info["required"]:
@@ -251,7 +249,7 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
                 base_type = param_type
             else:
                 base_type = param_type
-            
+
             default = param_info.get("default")
             if default is None:
                 param_list.append(f"{param_name}: Optional[{base_type}] = None")
@@ -261,7 +259,7 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
                 else:
                     param_list.append(f"{param_name}: {base_type} = {default}")
             param_docs.append(f"        {param_name}: {param_info['description']}")
-    
+
     # Build method signature
     if len(param_list) > 3:  # Multiple parameters
         params_str = ",\n        ".join(param_list)
@@ -269,22 +267,22 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
     else:
         params_str = ", ".join(param_list)
         method_signature = f"    def {method_name}({params_str}) -> Optional[bytes]:"
-    
+
     # Build docstring
     docstring_lines = [f'        """{summary}']
     if description and description != summary:
         docstring_lines.append("")
         docstring_lines.append(f"        {description}")
-    
+
     docstring_lines.extend([
         "",
         "        Args:",
         "            input_file: Input file (path, bytes, or file-like object).",
     ])
-    
+
     if param_docs:
         docstring_lines.extend(param_docs)
-    
+
     docstring_lines.extend([
         "            output_path: Optional path to save the output file.",
         "",
@@ -296,22 +294,22 @@ def generate_method_code(tool_info: Dict[str, Any]) -> str:
         "            APIError: For other API errors.",
         '        """',
     ])
-    
+
     # Build method body
     method_body = []
-    
+
     # Collect kwargs
     kwargs_params = [
-        f"{name}={name}" 
+        f"{name}={name}"
         for name in parameters.keys()
     ]
-    
+
     if kwargs_params:
         kwargs_str = ", ".join(kwargs_params)
         method_body.append(f'        return self._process_file("{tool_name}", input_file, output_path, {kwargs_str})')
     else:
         method_body.append(f'        return self._process_file("{tool_name}", input_file, output_path)')
-    
+
     # Combine all parts
     return "\n".join([
         method_signature,
@@ -325,10 +323,10 @@ def generate_api_methods(spec_path: Path, output_path: Path) -> None:
     # For Nutrient API, we'll use manually defined tools since they use
     # a build endpoint with actions rather than individual endpoints
     tools = create_manual_tools()
-    
+
     # Sort tools by method name
     tools.sort(key=lambda t: t["method_name"])
-    
+
     # Generate code
     code_lines = [
         '"""Direct API methods for individual document processing tools.',
@@ -350,12 +348,12 @@ def generate_api_methods(spec_path: Path, output_path: Path) -> None:
         '    """',
         '',
     ]
-    
+
     # Add methods
     for tool in tools:
         code_lines.append(generate_method_code(tool))
         code_lines.append("")  # Empty line between methods
-    
+
     # Write to file
     output_path.write_text("\n".join(code_lines))
     print(f"Generated {len(tools)} API methods in {output_path}")
@@ -364,5 +362,5 @@ def generate_api_methods(spec_path: Path, output_path: Path) -> None:
 if __name__ == "__main__":
     spec_path = Path("openapi_spec.yml")
     output_path = Path("src/nutrient/api/direct.py")
-    
+
     generate_api_methods(spec_path, output_path)

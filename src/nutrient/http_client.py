@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -54,7 +54,7 @@ class HTTPClient:
         }
         if self._api_key:
             headers["X-Api-Key"] = self._api_key
-            
+
         session.headers.update(headers)
 
         return session
@@ -75,14 +75,14 @@ class HTTPClient:
         """
         # Extract request ID if available
         request_id = response.headers.get("X-Request-Id")
-        
+
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError:
             # Try to parse error message from response
             error_message = f"HTTP {response.status_code}"
             error_details = None
-            
+
             try:
                 error_data = response.json()
                 error_message = error_data.get("message", error_message)
@@ -91,7 +91,7 @@ class HTTPClient:
                 # If response is not JSON, use text content
                 if response.text:
                     error_message = f"{error_message}: {response.text[:200]}"
-            
+
             # Handle specific status codes
             if response.status_code in (401, 403):
                 raise AuthenticationError(
@@ -109,7 +109,7 @@ class HTTPClient:
                     response_body=response.text,
                     request_id=request_id,
                 )
-        
+
         return response.content
 
     def post(
@@ -137,7 +137,7 @@ class HTTPClient:
         """
         if not self._api_key:
             raise AuthenticationError("API key is required but not provided")
-            
+
         url = f"{self._base_url}{endpoint}"
         logger.debug(f"POST {url}")
 
@@ -156,9 +156,9 @@ class HTTPClient:
         except requests.exceptions.Timeout as e:
             raise TimeoutError(f"Request timed out after {self._timeout} seconds") from e
         except requests.exceptions.ConnectionError as e:
-            raise APIError(f"Connection error: {str(e)}") from e
+            raise APIError(f"Connection error: {e!s}") from e
         except requests.exceptions.RequestException as e:
-            raise APIError(f"Request failed: {str(e)}") from e
+            raise APIError(f"Request failed: {e!s}") from e
 
         logger.debug(f"Response: {response.status_code}")
         return self._handle_response(response)

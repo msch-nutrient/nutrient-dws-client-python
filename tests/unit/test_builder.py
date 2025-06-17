@@ -2,8 +2,6 @@
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from nutrient.builder import BuildAPIWrapper
 
 
@@ -14,7 +12,7 @@ class TestBuildAPIWrapper:
         """Test initialization."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         assert builder._client is mock_client
         assert builder._input_file == "test.pdf"
         assert builder._parts == []
@@ -25,9 +23,9 @@ class TestBuildAPIWrapper:
         """Test adding a simple step."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         result = builder.add_step(tool="flatten-annotations")
-        
+
         assert result is builder  # Returns self for chaining
         assert len(builder._actions) == 1
         assert builder._actions[0] == {"type": "flatten"}
@@ -36,9 +34,9 @@ class TestBuildAPIWrapper:
         """Test adding a step with options."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(tool="rotate-pages", options={"degrees": 90})
-        
+
         assert len(builder._actions) == 1
         assert builder._actions[0] == {
             "type": "rotate",
@@ -49,12 +47,12 @@ class TestBuildAPIWrapper:
         """Test rotate step with page indexes."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(
             tool="rotate-pages",
             options={"degrees": 180, "page_indexes": [0, 2, 4]}
         )
-        
+
         assert builder._actions[0] == {
             "type": "rotate",
             "rotateBy": 180,
@@ -65,9 +63,9 @@ class TestBuildAPIWrapper:
         """Test OCR step."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(tool="ocr-pdf", options={"language": "de"})
-        
+
         assert builder._actions[0] == {
             "type": "ocr",
             "language": "de",
@@ -77,7 +75,7 @@ class TestBuildAPIWrapper:
         """Test watermark step with text."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(
             tool="watermark-pdf",
             options={
@@ -86,7 +84,7 @@ class TestBuildAPIWrapper:
                 "position": "top-right",
             }
         )
-        
+
         assert builder._actions[0] == {
             "type": "watermark",
             "text": "CONFIDENTIAL",
@@ -98,12 +96,12 @@ class TestBuildAPIWrapper:
         """Test watermark step with image."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(
             tool="watermark-pdf",
             options={"image_url": "https://example.com/logo.png"}
         )
-        
+
         assert builder._actions[0] == {
             "type": "watermark",
             "image": {"url": "https://example.com/logo.png"},
@@ -113,9 +111,9 @@ class TestBuildAPIWrapper:
         """Test adding unknown tool passes through."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(tool="custom-tool", options={"param": "value"})
-        
+
         assert builder._actions[0] == {
             "type": "custom-tool",
             "param": "value",
@@ -125,11 +123,11 @@ class TestBuildAPIWrapper:
         """Test chaining multiple steps."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         builder.add_step(tool="rotate-pages", options={"degrees": 90}) \
                .add_step(tool="ocr-pdf") \
                .add_step(tool="watermark-pdf", options={"text": "DRAFT"})
-        
+
         assert len(builder._actions) == 3
         assert builder._actions[0]["type"] == "rotate"
         assert builder._actions[1]["type"] == "ocr"
@@ -139,12 +137,12 @@ class TestBuildAPIWrapper:
         """Test setting output options."""
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
-        
+
         result = builder.set_output_options(
             metadata={"title": "My Doc", "author": "John"},
             optimize=True,
         )
-        
+
         assert result is builder  # Returns self for chaining
         assert builder._output_options == {
             "metadata": {"title": "My Doc", "author": "John"},
@@ -156,9 +154,9 @@ class TestBuildAPIWrapper:
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="flatten-annotations")
-        
+
         instructions = builder._build_instructions()
-        
+
         assert instructions == {
             "parts": [{"file": "file"}],
             "actions": [{"type": "flatten"}],
@@ -170,9 +168,9 @@ class TestBuildAPIWrapper:
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="ocr-pdf")
         builder.set_output_options(optimize=True)
-        
+
         instructions = builder._build_instructions()
-        
+
         assert instructions == {
             "parts": [{"file": "file"}],
             "actions": [{"type": "ocr"}],
@@ -183,18 +181,18 @@ class TestBuildAPIWrapper:
         """Test execute without output path."""
         mock_client = Mock()
         mock_client._http_client.post.return_value = b"PDF content"
-        
+
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="rotate-pages", options={"degrees": 90})
-        
+
         with patch("nutrient.builder.prepare_file_for_upload") as mock_prepare:
             mock_prepare.return_value = ("file", ("test.pdf", b"content", "application/pdf"))
-            
+
             result = builder.execute()
-        
+
         assert result == b"PDF content"
         mock_client._http_client.post.assert_called_once()
-        
+
         # Check the call arguments
         call_args = mock_client._http_client.post.call_args
         assert call_args[0][0] == "/build"
@@ -207,15 +205,15 @@ class TestBuildAPIWrapper:
         mock_client = Mock()
         mock_client._http_client.post.return_value = b"PDF content"
         output_file = tmp_path / "output.pdf"
-        
+
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="ocr-pdf")
-        
+
         with patch("nutrient.builder.prepare_file_for_upload") as mock_prepare:
             mock_prepare.return_value = ("file", ("test.pdf", b"content", "application/pdf"))
-            
+
             result = builder.execute(output_path=str(output_file))
-        
+
         assert result is None
         assert output_file.exists()
         assert output_file.read_bytes() == b"PDF content"
@@ -226,7 +224,7 @@ class TestBuildAPIWrapper:
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="rotate-pages", options={"degrees": 90})
         builder.add_step(tool="ocr-pdf")
-        
+
         assert str(builder) == "BuildAPIWrapper(steps=['rotate', 'ocr'])"
 
     def test_repr_representation(self):
@@ -234,7 +232,7 @@ class TestBuildAPIWrapper:
         mock_client = Mock()
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="rotate-pages", options={"degrees": 90})
-        
+
         repr_str = repr(builder)
         assert "BuildAPIWrapper(" in repr_str
         assert "input_file='test.pdf'" in repr_str

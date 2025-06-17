@@ -49,16 +49,16 @@ class APIError(NutrientError):
     def __str__(self) -> str:
         """String representation with all available error details."""
         parts = [str(self.args[0]) if self.args else "API Error"]
-        
+
         if self.status_code:
             parts.append(f"Status: {self.status_code}")
-        
+
         if self.request_id:
             parts.append(f"Request ID: {self.request_id}")
-            
+
         if self.response_body:
             parts.append(f"Response: {self.response_body}")
-            
+
         return " | ".join(parts)
 
 

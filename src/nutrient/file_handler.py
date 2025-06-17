@@ -37,7 +37,7 @@ def prepare_file_input(file_input: FileInput) -> Tuple[bytes, str]:
         if isinstance(content, str):
             content = content.encode()
         filename = getattr(file_input, "name", "document")
-        if hasattr(filename, "__fspath__"):
+        if hasattr(filename, "__fspath__") or isinstance(filename, (str, bytes)):
             filename = os.path.basename(filename)
         return content, str(filename)
     else:
@@ -62,12 +62,12 @@ def prepare_file_for_upload(
         ValueError: If input type is not supported.
     """
     content_type = "application/octet-stream"
-    
+
     if isinstance(file_input, str):
         path = Path(file_input)
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_input}")
-        
+
         # For large files, return file handle instead of reading into memory
         file_size = path.stat().st_size
         if file_size > 10 * 1024 * 1024:  # 10MB threshold
@@ -75,16 +75,16 @@ def prepare_file_for_upload(
             return field_name, (path.name, file_handle, content_type)
         else:
             return field_name, (path.name, path.read_bytes(), content_type)
-    
+
     elif isinstance(file_input, bytes):
         return field_name, ("document", file_input, content_type)
-    
+
     elif hasattr(file_input, "read"):
         filename = getattr(file_input, "name", "document")
         if hasattr(filename, "__fspath__"):
             filename = os.path.basename(filename)
         return field_name, (str(filename), file_input, content_type)
-    
+
     else:
         raise ValueError(f"Unsupported file input type: {type(file_input)}")
 
@@ -124,7 +124,7 @@ def stream_file_content(
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
-    
+
     with open(path, "rb") as f:
         while chunk := f.read(chunk_size):
             yield chunk
@@ -155,5 +155,5 @@ def get_file_size(file_input: FileInput) -> Optional[int]:
             return size
         except (OSError, io.UnsupportedOperation):
             pass
-    
+
     return None

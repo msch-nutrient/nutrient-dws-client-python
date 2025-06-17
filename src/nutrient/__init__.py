@@ -15,11 +15,11 @@ from nutrient.exceptions import (
 
 __version__ = "0.1.0"
 __all__ = [
+    "APIError",
+    "AuthenticationError",
+    "FileProcessingError",
     "NutrientClient",
     "NutrientError",
-    "AuthenticationError",
-    "APIError",
-    "ValidationError",
     "TimeoutError",
-    "FileProcessingError",
+    "ValidationError",
 ]

@@ -4,9 +4,12 @@ This file provides convenient methods that wrap the Nutrient Build API
 for common document processing operations.
 """
 
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from nutrient.file_handler import FileInput
+
+if TYPE_CHECKING:
+    from nutrient.client import NutrientClient
 
 
 class DirectAPIMixin:
@@ -15,6 +18,16 @@ class DirectAPIMixin:
     These methods provide a simplified interface to common document
     processing operations. They internally use the Build API.
     """
+
+    def _process_file(
+        self: "NutrientClient",
+        tool: str,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+        **options: Any,
+    ) -> Optional[bytes]:
+        """Process file method that will be provided by NutrientClient."""
+        raise NotImplementedError("This method is provided by NutrientClient")
 
     def convert_to_pdf(self, input_file: FileInput, output_path: Optional[str] = None) -> Optional[bytes]:
         """Convert a document to PDF

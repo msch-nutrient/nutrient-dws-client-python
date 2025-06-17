@@ -1,7 +1,6 @@
 """Builder API implementation for multi-step workflows."""
 
-import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from nutrient.file_handler import FileInput, prepare_file_for_upload, save_file_output
 
@@ -20,7 +19,7 @@ class BuildAPIWrapper:
         ...     .execute(output_path="processed.pdf")
     """
 
-    def __init__(self, client, input_file: FileInput) -> None:
+    def __init__(self, client: Any, input_file: FileInput) -> None:
         """Initialize builder with client and input file.
         
         Args:
@@ -83,24 +82,24 @@ class BuildAPIWrapper:
         """
         # Prepare the build instructions
         instructions = self._build_instructions()
-        
+
         # Prepare file for upload
         file_field, file_data = prepare_file_for_upload(self._input_file)
         files = {file_field: file_data}
-        
+
         # Make API request
         result = self._client._http_client.post(
             "/build",
             files=files,
             json_data=instructions,
         )
-        
+
         # Handle output
         if output_path:
             save_file_output(result, output_path)
             return None
         else:
-            return result
+            return result  # type: ignore[no-any-return]
 
     def _build_instructions(self) -> Dict[str, Any]:
         """Build the instructions payload for the API.
@@ -115,11 +114,11 @@ class BuildAPIWrapper:
             ],
             "actions": self._actions,
         }
-        
+
         # Add output options if specified
         if self._output_options:
             instructions["output"] = self._output_options
-            
+
         return instructions
 
     def _map_tool_to_action(self, tool: str, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -143,22 +142,22 @@ class BuildAPIWrapper:
             "create-redactions": "createRedactions",
             "apply-redactions": "applyRedactions",
         }
-        
+
         action_type = tool_mapping.get(tool, tool)
-        
+
         # Build action dictionary
         action = {"type": action_type}
-        
+
         # Handle special cases for different action types
         if action_type == "rotate":
             action["rotateBy"] = options.get("degrees", 0)
             if "page_indexes" in options:
                 action["pageIndexes"] = options["page_indexes"]
-                
+
         elif action_type == "ocr":
             if "language" in options:
                 action["language"] = options["language"]
-                
+
         elif action_type == "watermark":
             if "text" in options:
                 action["text"] = options["text"]
@@ -168,11 +167,11 @@ class BuildAPIWrapper:
                 action["opacity"] = options["opacity"]
             if "position" in options:
                 action["position"] = options["position"]
-                
+
         else:
             # For other actions, pass options directly
             action.update(options)
-            
+
         return action
 
     def __str__(self) -> str:
