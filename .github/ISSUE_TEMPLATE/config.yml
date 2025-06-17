@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Nutrient Documentation
+    url: https://www.nutrient.io/guides/
+    about: Check the official Nutrient documentation
+  - name: API Status
+    url: https://status.nutrient.io/
+    about: Check if the API is experiencing issues
+  - name: Commercial Support
+    url: https://www.nutrient.io/contact/
+    about: For commercial support inquiries

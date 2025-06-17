@@ -1,5 +1,11 @@
 # Nutrient DWS Python Client
 
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen.svg)](https://github.com/jdrhyne/nutrient-dws-client-python/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI version](https://img.shields.io/pypi/v/nutrient-dws.svg)](https://pypi.org/project/nutrient-dws/)
+
 A Python client library for the [Nutrient Document Web Services (DWS) API](https://www.nutrient.io/). This library provides a Pythonic interface to interact with Nutrient's document processing services, supporting both Direct API calls and Builder API workflows.
 
 ## Features
