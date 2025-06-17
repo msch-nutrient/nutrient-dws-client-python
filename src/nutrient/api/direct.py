@@ -18,7 +18,8 @@ class DirectAPIMixin:
     These methods provide a simplified interface to common document
     processing operations. They internally use the Build API.
     
-    Note: Only operations actually supported by the API are included.
+    Note: The API automatically converts supported document formats
+    (DOCX, XLSX, PPTX) to PDF when processing.
     """
 
     def _process_file(
@@ -31,13 +32,42 @@ class DirectAPIMixin:
         """Process file method that will be provided by NutrientClient."""
         raise NotImplementedError("This method is provided by NutrientClient")
 
+    def convert_to_pdf(
+        self,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+    ) -> Optional[bytes]:
+        """Convert a document to PDF.
+
+        Converts Office documents (DOCX, XLSX, PPTX) to PDF format.
+        This uses the API's implicit conversion - simply uploading a 
+        non-PDF document returns it as a PDF.
+
+        Args:
+            input_file: Input document (DOCX, XLSX, PPTX, etc).
+            output_path: Optional path to save the output PDF.
+
+        Returns:
+            Converted PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors (e.g., unsupported format).
+            
+        Note:
+            HTML files are not currently supported by the API.
+        """
+        # Use builder with no actions - implicit conversion happens
+        return self.build(input_file).execute(output_path)  # type: ignore
+
     def flatten_annotations(self, input_file: FileInput, output_path: Optional[str] = None) -> Optional[bytes]:
         """Flatten annotations and form fields in a PDF.
 
         Converts all annotations and form fields into static page content.
+        If input is an Office document, it will be converted to PDF first.
 
         Args:
-            input_file: Input PDF file (path, bytes, or file-like object).
+            input_file: Input file (PDF or Office document).
             output_path: Optional path to save the output file.
 
         Returns:
@@ -59,9 +89,10 @@ class DirectAPIMixin:
         """Rotate pages in a PDF.
 
         Rotate all pages or specific pages by the specified degrees.
+        If input is an Office document, it will be converted to PDF first.
 
         Args:
-            input_file: Input PDF file (path, bytes, or file-like object).
+            input_file: Input file (PDF or Office document).
             output_path: Optional path to save the output file.
             degrees: Rotation angle (90, 180, 270, or -90).
             page_indexes: Optional list of page indexes to rotate (0-based).
@@ -87,10 +118,11 @@ class DirectAPIMixin:
         """Apply OCR to a PDF to make it searchable.
 
         Performs optical character recognition on the PDF to extract text
-        and make it searchable.
+        and make it searchable. If input is an Office document, it will 
+        be converted to PDF first.
 
         Args:
-            input_file: Input PDF file (path, bytes, or file-like object).
+            input_file: Input file (PDF or Office document).
             output_path: Optional path to save the output file.
             language: OCR language. Supported: "english", "eng", "deu", "german".
                      Default is "english".
@@ -118,9 +150,10 @@ class DirectAPIMixin:
         """Add a watermark to a PDF.
 
         Adds a text or image watermark to all pages of the PDF.
+        If input is an Office document, it will be converted to PDF first.
 
         Args:
-            input_file: Input PDF file (path, bytes, or file-like object).
+            input_file: Input file (PDF or Office document).
             output_path: Optional path to save the output file.
             text: Text to use as watermark. Either text or image_url required.
             image_url: URL of image to use as watermark.
@@ -164,10 +197,11 @@ class DirectAPIMixin:
         """Apply redaction annotations to permanently remove content.
 
         Applies any redaction annotations in the PDF to permanently remove
-        the underlying content.
+        the underlying content. If input is an Office document, it will 
+        be converted to PDF first.
 
         Args:
-            input_file: Input PDF file (path, bytes, or file-like object).
+            input_file: Input file (PDF or Office document).
             output_path: Optional path to save the output file.
 
         Returns:
@@ -186,10 +220,12 @@ class DirectAPIMixin:
     ) -> Optional[bytes]:
         """Merge multiple PDF files into one.
 
-        Combines multiple PDF files into a single PDF in the order provided.
+        Combines multiple files into a single PDF in the order provided.
+        Office documents (DOCX, XLSX, PPTX) will be automatically converted 
+        to PDF before merging.
 
         Args:
-            input_files: List of input PDF files (paths, bytes, or file-like objects).
+            input_files: List of input files (PDFs or Office documents).
             output_path: Optional path to save the output file.
 
         Returns:
@@ -199,6 +235,14 @@ class DirectAPIMixin:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
             ValueError: If less than 2 files provided.
+            
+        Example:
+            # Merge PDFs and Office documents
+            client.merge_pdfs([
+                "document1.pdf",
+                "document2.docx",
+                "spreadsheet.xlsx"
+            ], "merged.pdf")
         """
         if len(input_files) < 2:
             raise ValueError("At least 2 files required for merge")
