@@ -1,6 +1,6 @@
 """Custom exceptions for Nutrient DWS client."""
 
-from typing import Optional
+from typing import Any, Dict, Optional
 
 
 class NutrientError(Exception):
@@ -10,9 +10,18 @@ class NutrientError(Exception):
 
 
 class AuthenticationError(NutrientError):
-    """Raised when authentication fails (401/403 errors)."""
+    """Raised when authentication fails (401/403 errors).
+    
+    This typically indicates:
+    - Missing API key
+    - Invalid API key
+    - Expired API key
+    - Insufficient permissions
+    """
 
-    pass
+    def __init__(self, message: str = "Authentication failed") -> None:
+        """Initialize AuthenticationError."""
+        super().__init__(message)
 
 
 class APIError(NutrientError):
@@ -21,6 +30,7 @@ class APIError(NutrientError):
     Attributes:
         status_code: HTTP status code from the API.
         response_body: Raw response body from the API for debugging.
+        request_id: Request ID for tracking (if available).
     """
 
     def __init__(
@@ -28,8 +38,46 @@ class APIError(NutrientError):
         message: str,
         status_code: Optional[int] = None,
         response_body: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> None:
         """Initialize APIError with status code and response body."""
         super().__init__(message)
         self.status_code = status_code
         self.response_body = response_body
+        self.request_id = request_id
+
+    def __str__(self) -> str:
+        """String representation with all available error details."""
+        parts = [str(self.args[0]) if self.args else "API Error"]
+
+        if self.status_code:
+            parts.append(f"Status: {self.status_code}")
+
+        if self.request_id:
+            parts.append(f"Request ID: {self.request_id}")
+
+        if self.response_body:
+            parts.append(f"Response: {self.response_body}")
+
+        return " | ".join(parts)
+
+
+class ValidationError(NutrientError):
+    """Raised when request validation fails."""
+
+    def __init__(self, message: str, errors: Optional[Dict[str, Any]] = None) -> None:
+        """Initialize ValidationError with validation details."""
+        super().__init__(message)
+        self.errors = errors or {}
+
+
+class TimeoutError(NutrientError):
+    """Raised when a request times out."""
+
+    pass
+
+
+class FileProcessingError(NutrientError):
+    """Raised when file processing fails."""
+
+    pass
