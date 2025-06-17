@@ -10,8 +10,8 @@ from typing import Generator
 
 import pytest
 
-from nutrient import NutrientClient
-from nutrient.exceptions import AuthenticationError
+from nutrient_dws import NutrientClient
+from nutrient_dws.exceptions import AuthenticationError
 
 
 # Skip integration tests if no API key is provided

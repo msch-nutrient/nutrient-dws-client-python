@@ -6,8 +6,8 @@ import pytest
 import requests
 import responses
 
-from nutrient.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
-from nutrient.http_client import HTTPClient
+from nutrient_dws.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
+from nutrient_dws.http_client import HTTPClient
 
 
 class TestHTTPClient:
@@ -18,7 +18,7 @@ class TestHTTPClient:
         client = HTTPClient(api_key="test-key", timeout=120)
         assert client._api_key == "test-key"
         assert client._timeout == 120
-        assert client._base_url == "https://www.nutrient.io/api/processor-api"
+        assert client._base_url == "https://api.pspdfkit.com"
 
     def test_init_without_api_key(self):
         """Test initialization without API key."""
@@ -29,13 +29,13 @@ class TestHTTPClient:
     def test_session_headers_with_api_key(self):
         """Test session headers include API key."""
         client = HTTPClient(api_key="test-key")
-        assert client._session.headers["X-Api-Key"] == "test-key"
+        assert client._session.headers["Authorization"] == "Bearer test-key"
         assert "User-Agent" in client._session.headers
 
     def test_session_headers_without_api_key(self):
         """Test session headers without API key."""
         client = HTTPClient(api_key=None)
-        assert "X-Api-Key" not in client._session.headers
+        assert "Authorization" not in client._session.headers
         assert "User-Agent" in client._session.headers
 
     @responses.activate
@@ -43,7 +43,7 @@ class TestHTTPClient:
         """Test successful POST request."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             body=b"Success response",
             status=200,
         )
@@ -67,7 +67,7 @@ class TestHTTPClient:
         """Test 401 response raises AuthenticationError."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             json={"message": "Invalid API key"},
             status=401,
         )
@@ -82,7 +82,7 @@ class TestHTTPClient:
         """Test 403 response raises AuthenticationError."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             body="Forbidden",
             status=403,
         )
@@ -101,7 +101,7 @@ class TestHTTPClient:
         }
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             json={"message": "Validation failed", "errors": error_details},
             status=422,
         )
@@ -118,7 +118,7 @@ class TestHTTPClient:
         """Test API error with JSON response."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             json={"message": "Server error occurred"},
             status=500,
             headers={"X-Request-Id": "req-123"},
@@ -138,7 +138,7 @@ class TestHTTPClient:
         """Test API error with text response."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             body="Internal server error",
             status=500,
         )
@@ -176,7 +176,7 @@ class TestHTTPClient:
         """Test POST with files."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/process",
+            "https://api.pspdfkit.com/process",
             body=b"Processed file",
             status=200,
         )
@@ -193,7 +193,7 @@ class TestHTTPClient:
         """Test POST with JSON data (multipart)."""
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/build",
+            "https://api.pspdfkit.com/build",
             body=b"Built result",
             status=200,
         )
@@ -226,11 +226,11 @@ class TestHTTPClient:
     def test_retry_on_500_errors(self):
         """Test retry logic for 5xx errors."""
         # First two calls fail, third succeeds
-        responses.add(responses.POST, "https://www.nutrient.io/api/processor-api/test", status=500)
-        responses.add(responses.POST, "https://www.nutrient.io/api/processor-api/test", status=502)
+        responses.add(responses.POST, "https://api.pspdfkit.com/test", status=500)
+        responses.add(responses.POST, "https://api.pspdfkit.com/test", status=502)
         responses.add(
             responses.POST,
-            "https://www.nutrient.io/api/processor-api/test",
+            "https://api.pspdfkit.com/test",
             body=b"Success after retry",
             status=200,
         )

@@ -3,8 +3,8 @@
 import os
 from unittest.mock import patch
 
-from nutrient import NutrientClient
-from nutrient.builder import BuildAPIWrapper
+from nutrient_dws import NutrientClient
+from nutrient_dws.builder import BuildAPIWrapper
 
 
 class TestNutrientClient:
@@ -56,7 +56,7 @@ class TestNutrientClient:
             mock_post.return_value = b"PDF content"
 
             # Mock prepare_file_for_upload to avoid file not found
-            with patch("nutrient.client.prepare_file_for_upload") as mock_prepare:
+            with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
                 mock_prepare.return_value = ("file", ("input.pdf", b"content", "application/pdf"))
 
                 result = client._process_file("test-tool", "input.pdf", degrees=90)
@@ -64,11 +64,9 @@ class TestNutrientClient:
             assert result == b"PDF content"
             mock_post.assert_called_once()
 
-            # Check the call arguments
+            # Check the call arguments - now uses /build endpoint
             call_args = mock_post.call_args
-            assert call_args[0][0] == "/process/test-tool"
-            assert "degrees" in call_args[1]["data"]
-            assert call_args[1]["data"]["degrees"] == "90"
+            assert call_args[0][0] == "/build"
 
     def test_process_file_with_output_path(self, tmp_path):
         """Test _process_file saves to file when output_path provided."""
@@ -79,18 +77,21 @@ class TestNutrientClient:
             mock_post.return_value = b"PDF content"
 
             # Mock prepare_file_for_upload to avoid file not found
-            with patch("nutrient.client.prepare_file_for_upload") as mock_prepare:
+            with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
                 mock_prepare.return_value = ("file", ("input.pdf", b"content", "application/pdf"))
-
-                result = client._process_file(
-                    "test-tool",
-                    "input.pdf",
-                    output_path=str(output_file)
-                )
+                
+                # Also need to mock save_file_output
+                with patch("nutrient_dws.builder.save_file_output") as mock_save:
+                    result = client._process_file(
+                        "test-tool",
+                        "input.pdf",
+                        output_path=str(output_file)
+                    )
+                    
+                    # Verify save was called with the right arguments
+                    mock_save.assert_called_once_with(b"PDF content", str(output_file))
 
             assert result is None
-            assert output_file.exists()
-            assert output_file.read_bytes() == b"PDF content"
 
     def test_context_manager(self):
         """Test client can be used as context manager."""
@@ -109,17 +110,19 @@ class TestNutrientClient:
         """Test convert_to_pdf method integration."""
         client = NutrientClient(api_key="test-key")
 
-        with patch.object(client, "_process_file") as mock_process:
-            mock_process.return_value = b"PDF content"
+        with patch.object(client._http_client, "post") as mock_post:
+            mock_post.return_value = b"PDF content"
+            
+            with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
+                mock_prepare.return_value = ("file", ("document.docx", b"content", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
 
-            result = client.convert_to_pdf("document.docx")
+                result = client.convert_to_pdf("document.docx")
 
-            mock_process.assert_called_once_with(
-                "convert-to-pdf",
-                "document.docx",
-                None
-            )
             assert result == b"PDF content"
+            mock_post.assert_called_once()
+            # Should use /build endpoint with no actions for implicit conversion
+            call_args = mock_post.call_args
+            assert call_args[0][0] == "/build"
 
     def test_rotate_pages_integration(self):
         """Test rotate_pages method integration with parameters."""

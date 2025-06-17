@@ -3,8 +3,8 @@
 A Python client library for the Nutrient Document Web Services API.
 """
 
-from nutrient.client import NutrientClient
-from nutrient.exceptions import (
+from nutrient_dws.client import NutrientClient
+from nutrient_dws.exceptions import (
     APIError,
     AuthenticationError,
     FileProcessingError,
@@ -15,11 +15,11 @@ from nutrient.exceptions import (
 
 __version__ = "0.1.0"
 __all__ = [
-    "NutrientClient",
-    "NutrientError",
     "APIError",
     "AuthenticationError",
     "FileProcessingError",
+    "NutrientClient",
+    "NutrientError",
     "TimeoutError",
     "ValidationError",
 ]

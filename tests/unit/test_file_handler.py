@@ -4,7 +4,7 @@ import io
 
 import pytest
 
-from nutrient.file_handler import (
+from nutrient_dws.file_handler import (
     get_file_size,
     prepare_file_for_upload,
     prepare_file_input,

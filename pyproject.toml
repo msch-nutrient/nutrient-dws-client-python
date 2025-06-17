@@ -59,7 +59,7 @@ Repository = "https://github.com/jdrhyne/nutrient-dws-client-python"
 where = ["src"]
 
 [tool.setuptools.package-data]
-nutrient = ["py.typed"]
+nutrient_dws = ["py.typed"]
 
 [tool.ruff]
 target-version = "py38"
@@ -110,7 +110,7 @@ testpaths = ["tests"]
 addopts = [
     "-ra",
     "--strict-markers",
-    "--cov=nutrient",
+    "--cov=nutrient_dws",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
@@ -120,7 +120,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/nutrient"]
+source = ["src/nutrient_dws"]
 branch = true
 
 [tool.coverage.report]

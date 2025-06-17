@@ -337,7 +337,7 @@ def generate_api_methods(spec_path: Path, output_path: Path) -> None:
         '',
         'from typing import List, Optional',
         '',
-        'from nutrient.file_handler import FileInput',
+        'from nutrient_dws.file_handler import FileInput',
         '',
         '',
         'class DirectAPIMixin:',

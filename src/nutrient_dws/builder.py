@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from nutrient.file_handler import FileInput, prepare_file_for_upload, save_file_output
+from nutrient_dws.file_handler import FileInput, prepare_file_for_upload, save_file_output
 
 
 class BuildAPIWrapper:
@@ -127,7 +127,7 @@ class BuildAPIWrapper:
 
         # Add output options if specified
         if self._output_options:
-            instructions["output"] = self._output_options
+            instructions["output"] = self._output_options  # type: ignore
 
         return instructions
 
@@ -169,7 +169,7 @@ class BuildAPIWrapper:
                 # Map common language codes to API format
                 lang_map = {
                     "en": "english",
-                    "de": "deu", 
+                    "de": "deu",
                     "eng": "eng",
                     "deu": "deu",
                     "german": "deu",
@@ -181,15 +181,15 @@ class BuildAPIWrapper:
             # Watermark requires width/height
             action["width"] = options.get("width", 200)  # Default width
             action["height"] = options.get("height", 100)  # Default height
-            
+
             if "text" in options:
                 action["text"] = options["text"]
             elif "image_url" in options:
-                action["image"] = {"url": options["image_url"]}
+                action["image"] = {"url": options["image_url"]}  # type: ignore
             else:
                 # Default to text watermark if neither specified
                 action["text"] = "WATERMARK"
-                
+
             if "opacity" in options:
                 action["opacity"] = options["opacity"]
             if "position" in options:

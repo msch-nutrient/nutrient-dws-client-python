@@ -81,7 +81,7 @@ The library is architected around a central `NutrientClient` class, which is the
 The client will be initialized with an optional API key and timeout. It will follow modern Python library best practices for configuration.
 
 ```python
-from nutrient import NutrientClient, AuthenticationError
+from nutrient_dws import NutrientClient, AuthenticationError
 
 # Option 1: API key passed directly (takes precedence)
 client = NutrientClient(api_key="YOUR_DWS_API_KEY", timeout=300) 
@@ -143,7 +143,7 @@ The Builder API provides a more elegant and efficient solution for multi-step wo
 
 **Example Usage:**
 ```python
-from nutrient import APIError
+from nutrient_dws import APIError
 
 # User Story: Convert a DOCX to PDF and rotate it (Builder version)
 try:

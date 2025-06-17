@@ -21,7 +21,7 @@ pip install nutrient-dws
 ## Quick Start
 
 ```python
-from nutrient import NutrientClient
+from nutrient_dws import NutrientClient
 
 # Initialize the client
 client = NutrientClient(api_key="your-api-key")
@@ -173,7 +173,7 @@ client.import_from_url("https://example.com/document.pdf")
 The library provides specific exceptions for different error scenarios:
 
 ```python
-from nutrient import (
+from nutrient_dws import (
     NutrientError,
     AuthenticationError,
     APIError,

@@ -6,10 +6,10 @@ for supported document processing operations.
 
 from typing import TYPE_CHECKING, Any, List, Optional
 
-from nutrient.file_handler import FileInput
+from nutrient_dws.file_handler import FileInput
 
 if TYPE_CHECKING:
-    from nutrient.client import NutrientClient
+    from nutrient_dws.client import NutrientClient
 
 
 class DirectAPIMixin:
@@ -60,7 +60,9 @@ class DirectAPIMixin:
         # Use builder with no actions - implicit conversion happens
         return self.build(input_file).execute(output_path)  # type: ignore
 
-    def flatten_annotations(self, input_file: FileInput, output_path: Optional[str] = None) -> Optional[bytes]:
+    def flatten_annotations(
+        self, input_file: FileInput, output_path: Optional[str] = None
+    ) -> Optional[bytes]:
         """Flatten annotations and form fields in a PDF.
 
         Converts all annotations and form fields into static page content.
@@ -106,7 +108,7 @@ class DirectAPIMixin:
         """
         options = {"degrees": degrees}
         if page_indexes is not None:
-            options["page_indexes"] = page_indexes
+            options["page_indexes"] = page_indexes  # type: ignore
         return self._process_file("rotate-pages", input_file, output_path, **options)
 
     def ocr_pdf(
@@ -174,19 +176,19 @@ class DirectAPIMixin:
         """
         if not text and not image_url:
             raise ValueError("Either text or image_url must be provided")
-            
+
         options = {
             "width": width,
             "height": height,
             "opacity": opacity,
             "position": position,
         }
-        
+
         if text:
             options["text"] = text
         else:
             options["image_url"] = image_url
-            
+
         return self._process_file("watermark-pdf", input_file, output_path, **options)
 
     def apply_redactions(
@@ -246,32 +248,32 @@ class DirectAPIMixin:
         """
         if len(input_files) < 2:
             raise ValueError("At least 2 files required for merge")
-            
-        from nutrient.file_handler import prepare_file_for_upload, save_file_output
-        
+
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
         # Prepare files for upload
         files = {}
         parts = []
-        
+
         for i, file in enumerate(input_files):
             field_name = f"file{i}"
             file_field, file_data = prepare_file_for_upload(file, field_name)
             files[file_field] = file_data
             parts.append({"file": field_name})
-        
+
         # Build instructions for merge (no actions needed)
         instructions = {
             "parts": parts,
             "actions": []
         }
-        
+
         # Make API request
-        result = self._http_client.post(  # type: ignore
+        result = self._http_client.post(
             "/build",
             files=files,
             json_data=instructions,
         )
-        
+
         # Handle output
         if output_path:
             save_file_output(result, output_path)

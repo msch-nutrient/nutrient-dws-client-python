@@ -3,10 +3,10 @@
 import os
 from typing import Any, Optional
 
-from nutrient.api.direct import DirectAPIMixin
-from nutrient.builder import BuildAPIWrapper
-from nutrient.file_handler import FileInput, prepare_file_for_upload, save_file_output
-from nutrient.http_client import HTTPClient
+from nutrient_dws.api.direct import DirectAPIMixin
+from nutrient_dws.builder import BuildAPIWrapper
+from nutrient_dws.file_handler import FileInput
+from nutrient_dws.http_client import HTTPClient
 
 
 class NutrientClient(DirectAPIMixin):
@@ -29,7 +29,7 @@ class NutrientClient(DirectAPIMixin):
         AuthenticationError: When making API calls without a valid API key.
         
     Example:
-        >>> from nutrient import NutrientClient
+        >>> from nutrient_dws import NutrientClient
         >>> client = NutrientClient(api_key="your-api-key")
         >>> # Direct API
         >>> pdf = client.convert_to_pdf(input_file="document.docx")

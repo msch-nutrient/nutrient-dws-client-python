@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from nutrient.builder import BuildAPIWrapper
+from nutrient_dws.builder import BuildAPIWrapper
 
 
 class TestBuildAPIWrapper:
@@ -15,7 +15,7 @@ class TestBuildAPIWrapper:
 
         assert builder._client is mock_client
         assert builder._input_file == "test.pdf"
-        assert builder._parts == []
+        assert builder._parts == [{"file": "file"}]
         assert builder._actions == []
         assert builder._output_options == {}
 
@@ -68,7 +68,7 @@ class TestBuildAPIWrapper:
 
         assert builder._actions[0] == {
             "type": "ocr",
-            "language": "de",
+            "language": "deu",
         }
 
     def test_add_step_watermark_text(self):
@@ -88,6 +88,8 @@ class TestBuildAPIWrapper:
         assert builder._actions[0] == {
             "type": "watermark",
             "text": "CONFIDENTIAL",
+            "width": 200,
+            "height": 100,
             "opacity": 0.3,
             "position": "top-right",
         }
@@ -105,6 +107,8 @@ class TestBuildAPIWrapper:
         assert builder._actions[0] == {
             "type": "watermark",
             "image": {"url": "https://example.com/logo.png"},
+            "width": 200,
+            "height": 100,
         }
 
     def test_add_step_unknown_tool(self):
@@ -185,7 +189,7 @@ class TestBuildAPIWrapper:
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="rotate-pages", options={"degrees": 90})
 
-        with patch("nutrient.builder.prepare_file_for_upload") as mock_prepare:
+        with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
             mock_prepare.return_value = ("file", ("test.pdf", b"content", "application/pdf"))
 
             result = builder.execute()
@@ -209,7 +213,7 @@ class TestBuildAPIWrapper:
         builder = BuildAPIWrapper(mock_client, "test.pdf")
         builder.add_step(tool="ocr-pdf")
 
-        with patch("nutrient.builder.prepare_file_for_upload") as mock_prepare:
+        with patch("nutrient_dws.builder.prepare_file_for_upload") as mock_prepare:
             mock_prepare.return_value = ("file", ("test.pdf", b"content", "application/pdf"))
 
             result = builder.execute(output_path=str(output_file))

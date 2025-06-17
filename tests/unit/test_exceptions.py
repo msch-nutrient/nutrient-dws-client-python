@@ -1,7 +1,7 @@
 """Unit tests for custom exceptions."""
 
 
-from nutrient.exceptions import (
+from nutrient_dws.exceptions import (
     APIError,
     AuthenticationError,
     FileProcessingError,

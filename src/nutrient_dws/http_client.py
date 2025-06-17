@@ -8,7 +8,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from nutrient.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
+from nutrient_dws.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class HTTPClient:
 
         # Set default headers
         headers = {
-            "User-Agent": "nutrient-python-client/0.1.0",
+            "User-Agent": "nutrient-dws-python-client/0.1.0",
         }
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
@@ -96,19 +96,19 @@ class HTTPClient:
             if response.status_code in (401, 403):
                 raise AuthenticationError(
                     error_message or "Authentication failed. Check your API key."
-                )
+                ) from None
             elif response.status_code == 422:
                 raise ValidationError(
                     error_message or "Request validation failed",
                     errors=error_details,
-                )
+                ) from None
             else:
                 raise APIError(
                     error_message,
                     status_code=response.status_code,
                     response_body=response.text,
                     request_id=request_id,
-                )
+                ) from None
 
         return response.content
 
