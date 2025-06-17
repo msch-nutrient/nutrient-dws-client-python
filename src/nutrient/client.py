@@ -77,6 +77,7 @@ class NutrientClient(DirectAPIMixin):
         """Process a file using the Direct API.
         
         This is the internal method used by all Direct API methods.
+        It internally uses the Build API with a single action.
         
         Args:
             tool: The tool identifier from the API.
@@ -91,23 +92,10 @@ class NutrientClient(DirectAPIMixin):
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
         """
-        # Prepare file for upload
-        file_field, file_data = prepare_file_for_upload(input_file)
-        files = {file_field: file_data}
-
-        # Prepare form data with options
-        data = {k: str(v) for k, v in options.items() if v is not None}
-
-        # Make API request
-        endpoint = f"/process/{tool}"
-        result = self._http_client.post(endpoint, files=files, data=data)
-
-        # Handle output
-        if output_path:
-            save_file_output(result, output_path)
-            return None
-        else:
-            return result
+        # Use the builder API with a single step
+        builder = self.build(input_file)
+        builder.add_step(tool, options)
+        return builder.execute(output_path)
 
     def close(self) -> None:
         """Close the HTTP client session."""

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import BinaryIO, Generator, Optional, Tuple, Union
 
-FileInput = Union[str, bytes, BinaryIO]
+FileInput = Union[str, Path, bytes, BinaryIO]
 
 # Default chunk size for streaming operations (1MB)
 DEFAULT_CHUNK_SIZE = 1024 * 1024
@@ -24,7 +24,12 @@ def prepare_file_input(file_input: FileInput) -> Tuple[bytes, str]:
         FileNotFoundError: If file path doesn't exist.
         ValueError: If input type is not supported.
     """
-    if isinstance(file_input, str):
+    # Handle Path objects
+    if isinstance(file_input, Path):
+        if not file_input.exists():
+            raise FileNotFoundError(f"File not found: {file_input}")
+        return file_input.read_bytes(), file_input.name
+    elif isinstance(file_input, str):
         path = Path(file_input)
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_input}")
@@ -62,6 +67,10 @@ def prepare_file_for_upload(
         ValueError: If input type is not supported.
     """
     content_type = "application/octet-stream"
+
+    # Handle Path objects
+    if isinstance(file_input, Path):
+        file_input = str(file_input)
 
     if isinstance(file_input, str):
         path = Path(file_input)

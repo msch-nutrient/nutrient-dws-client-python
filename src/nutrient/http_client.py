@@ -26,7 +26,7 @@ class HTTPClient:
         self._api_key = api_key
         self._timeout = timeout
         self._session = self._create_session()
-        self._base_url = "https://www.nutrient.io/api/processor-api"
+        self._base_url = "https://api.pspdfkit.com"
 
     def _create_session(self) -> requests.Session:
         """Create requests session with retry logic."""
@@ -53,7 +53,7 @@ class HTTPClient:
             "User-Agent": "nutrient-python-client/0.1.0",
         }
         if self._api_key:
-            headers["X-Api-Key"] = self._api_key
+            headers["Authorization"] = f"Bearer {self._api_key}"
 
         session.headers.update(headers)
 
@@ -144,7 +144,7 @@ class HTTPClient:
         # Prepare multipart data if json_data is provided
         prepared_data = data or {}
         if json_data is not None:
-            prepared_data["actions"] = (None, json.dumps(json_data), "application/json")
+            prepared_data["instructions"] = json.dumps(json_data)
 
         try:
             response = self._session.post(
