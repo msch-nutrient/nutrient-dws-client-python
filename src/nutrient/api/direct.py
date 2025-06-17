@@ -1,7 +1,7 @@
-"""Direct API methods for individual document processing tools.
+"""Direct API methods for supported document processing tools.
 
 This file provides convenient methods that wrap the Nutrient Build API
-for common document processing operations.
+for supported document processing operations.
 """
 
 from typing import TYPE_CHECKING, Any, List, Optional
@@ -17,6 +17,8 @@ class DirectAPIMixin:
     
     These methods provide a simplified interface to common document
     processing operations. They internally use the Build API.
+    
+    Note: Only operations actually supported by the API are included.
     """
 
     def _process_file(
@@ -29,107 +31,13 @@ class DirectAPIMixin:
         """Process file method that will be provided by NutrientClient."""
         raise NotImplementedError("This method is provided by NutrientClient")
 
-    def convert_to_pdf(self, input_file: FileInput, output_path: Optional[str] = None) -> Optional[bytes]:
-        """Convert a document to PDF
-
-        Convert various document formats (DOCX, XLSX, PPTX, etc.) to PDF.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("convert-to-pdf", input_file, output_path)
-
-    def convert_to_pdfa(
-        self,
-        input_file: FileInput,
-        output_path: Optional[str] = None,
-        conformance_level: str = "2b",
-    ) -> Optional[bytes]:
-        """Convert a document to PDF/A
-
-        Convert documents to PDF/A format for long-term archiving.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        conformance_level: PDF/A conformance level (e.g., '2b', '3b')
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("convert-to-pdfa", input_file, output_path, conformance_level=conformance_level)
-
-    def export_pdf_to_images(
-        self,
-        input_file: FileInput,
-        output_path: Optional[str] = None,
-        format: str = "png",
-        dpi: int = 150,
-        page_indexes: Optional[List[int]] = None,
-    ) -> Optional[bytes]:
-        """Export PDF pages as images
-
-        Convert PDF pages to image files.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        format: Image format ('png', 'jpeg', 'webp')
-        dpi: Image resolution in DPI
-        page_indexes: List of page indexes to export (0-based)
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("export-pdf-to-images", input_file, output_path, format=format, dpi=dpi, page_indexes=page_indexes)
-
-    def export_pdf_to_office(
-        self,
-        input_file: FileInput,
-        format: str,
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
-        """Export PDF to Office format
-
-        Convert PDF to Microsoft Office formats (DOCX, XLSX, PPTX).
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        format: Output format ('docx', 'xlsx', 'pptx')
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("export-pdf-to-office", input_file, output_path, format=format)
-
     def flatten_annotations(self, input_file: FileInput, output_path: Optional[str] = None) -> Optional[bytes]:
-        """Flatten PDF annotations
+        """Flatten annotations and form fields in a PDF.
 
-        Flatten annotations and form fields in a PDF.
+        Converts all annotations and form fields into static page content.
 
         Args:
-            input_file: Input file (path, bytes, or file-like object).
+            input_file: Input PDF file (path, bytes, or file-like object).
             output_path: Optional path to save the output file.
 
         Returns:
@@ -141,20 +49,51 @@ class DirectAPIMixin:
         """
         return self._process_file("flatten-annotations", input_file, output_path)
 
+    def rotate_pages(
+        self,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+        degrees: int = 0,
+        page_indexes: Optional[List[int]] = None,
+    ) -> Optional[bytes]:
+        """Rotate pages in a PDF.
+
+        Rotate all pages or specific pages by the specified degrees.
+
+        Args:
+            input_file: Input PDF file (path, bytes, or file-like object).
+            output_path: Optional path to save the output file.
+            degrees: Rotation angle (90, 180, 270, or -90).
+            page_indexes: Optional list of page indexes to rotate (0-based).
+
+        Returns:
+            Processed file as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+        """
+        options = {"degrees": degrees}
+        if page_indexes is not None:
+            options["page_indexes"] = page_indexes
+        return self._process_file("rotate-pages", input_file, output_path, **options)
+
     def ocr_pdf(
         self,
         input_file: FileInput,
         output_path: Optional[str] = None,
-        language: str = "en",
+        language: str = "english",
     ) -> Optional[bytes]:
-        """Perform OCR on a PDF
+        """Apply OCR to a PDF to make it searchable.
 
-        Apply optical character recognition to make scanned PDFs searchable.
+        Performs optical character recognition on the PDF to extract text
+        and make it searchable.
 
         Args:
-            input_file: Input file (path, bytes, or file-like object).
-        language: OCR language code (e.g., 'en', 'de', 'fr')
+            input_file: Input PDF file (path, bytes, or file-like object).
             output_path: Optional path to save the output file.
+            language: OCR language. Supported: "english", "eng", "deu", "german".
+                     Default is "english".
 
         Returns:
             Processed file as bytes, or None if output_path is provided.
@@ -165,105 +104,70 @@ class DirectAPIMixin:
         """
         return self._process_file("ocr-pdf", input_file, output_path, language=language)
 
-    def redact_pdf(
-        self,
-        input_file: FileInput,
-        output_path: Optional[str] = None,
-        types: Optional[List[str]] = None,
-    ) -> Optional[bytes]:
-        """Redact sensitive information from PDF
-
-        Use AI to automatically redact sensitive information from a PDF.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        types: Types of information to redact (e.g., 'email', 'phone', 'ssn')
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("redact-pdf", input_file, output_path, types=types)
-
-    def rotate_pages(
-        self,
-        input_file: FileInput,
-        degrees: int,
-        output_path: Optional[str] = None,
-        page_indexes: Optional[List[int]] = None,
-    ) -> Optional[bytes]:
-        """Rotate PDF pages
-
-        Rotate pages in a PDF document.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        degrees: Rotation angle in degrees (90, 180, 270)
-        page_indexes: List of page indexes to rotate (0-based). If not specified, all pages are rotated.
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("rotate-pages", input_file, output_path, degrees=degrees, page_indexes=page_indexes)
-
-    def sign_pdf(
-        self,
-        input_file: FileInput,
-        certificate_file: 'FileInput',
-        certificate_password: str,
-        output_path: Optional[str] = None,
-        reason: Optional[str] = None,
-        location: Optional[str] = None,
-    ) -> Optional[bytes]:
-        """Digitally sign a PDF
-
-        Add a digital signature to a PDF document.
-
-        Args:
-            input_file: Input file (path, bytes, or file-like object).
-        certificate_file: Digital certificate file (P12/PFX format)
-        certificate_password: Certificate password
-        reason: Reason for signing
-        location: Location of signing
-            output_path: Optional path to save the output file.
-
-        Returns:
-            Processed file as bytes, or None if output_path is provided.
-
-        Raises:
-            AuthenticationError: If API key is missing or invalid.
-            APIError: For other API errors.
-        """
-        return self._process_file("sign-pdf", input_file, output_path, certificate_file=certificate_file, certificate_password=certificate_password, reason=reason, location=location)
-
     def watermark_pdf(
         self,
         input_file: FileInput,
         output_path: Optional[str] = None,
         text: Optional[str] = None,
         image_url: Optional[str] = None,
-        opacity: float = 0.5,
+        width: int = 200,
+        height: int = 100,
+        opacity: float = 1.0,
         position: str = "center",
     ) -> Optional[bytes]:
-        """Add watermark to PDF
+        """Add a watermark to a PDF.
 
-        Add text or image watermark to PDF pages.
+        Adds a text or image watermark to all pages of the PDF.
 
         Args:
-            input_file: Input file (path, bytes, or file-like object).
-        text: Watermark text
-        image_url: URL of watermark image
-        opacity: Watermark opacity (0.0 to 1.0)
-        position: Watermark position
+            input_file: Input PDF file (path, bytes, or file-like object).
+            output_path: Optional path to save the output file.
+            text: Text to use as watermark. Either text or image_url required.
+            image_url: URL of image to use as watermark.
+            width: Width of the watermark in points (required).
+            height: Height of the watermark in points (required).
+            opacity: Opacity of the watermark (0.0 to 1.0).
+            position: Position of watermark. One of: "top-left", "top-center",
+                     "top-right", "center", "bottom-left", "bottom-center",
+                     "bottom-right".
+
+        Returns:
+            Processed file as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If neither text nor image_url is provided.
+        """
+        if not text and not image_url:
+            raise ValueError("Either text or image_url must be provided")
+            
+        options = {
+            "width": width,
+            "height": height,
+            "opacity": opacity,
+            "position": position,
+        }
+        
+        if text:
+            options["text"] = text
+        else:
+            options["image_url"] = image_url
+            
+        return self._process_file("watermark-pdf", input_file, output_path, **options)
+
+    def apply_redactions(
+        self,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+    ) -> Optional[bytes]:
+        """Apply redaction annotations to permanently remove content.
+
+        Applies any redaction annotations in the PDF to permanently remove
+        the underlying content.
+
+        Args:
+            input_file: Input PDF file (path, bytes, or file-like object).
             output_path: Optional path to save the output file.
 
         Returns:
@@ -273,4 +177,60 @@ class DirectAPIMixin:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
         """
-        return self._process_file("watermark-pdf", input_file, output_path, text=text, image_url=image_url, opacity=opacity, position=position)
+        return self._process_file("apply-redactions", input_file, output_path)
+
+    def merge_pdfs(
+        self: "NutrientClient",
+        input_files: List[FileInput],
+        output_path: Optional[str] = None,
+    ) -> Optional[bytes]:
+        """Merge multiple PDF files into one.
+
+        Combines multiple PDF files into a single PDF in the order provided.
+
+        Args:
+            input_files: List of input PDF files (paths, bytes, or file-like objects).
+            output_path: Optional path to save the output file.
+
+        Returns:
+            Merged PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If less than 2 files provided.
+        """
+        if len(input_files) < 2:
+            raise ValueError("At least 2 files required for merge")
+            
+        from nutrient.file_handler import prepare_file_for_upload, save_file_output
+        
+        # Prepare files for upload
+        files = {}
+        parts = []
+        
+        for i, file in enumerate(input_files):
+            field_name = f"file{i}"
+            file_field, file_data = prepare_file_for_upload(file, field_name)
+            files[file_field] = file_data
+            parts.append({"file": field_name})
+        
+        # Build instructions for merge (no actions needed)
+        instructions = {
+            "parts": parts,
+            "actions": []
+        }
+        
+        # Make API request
+        result = self._http_client.post(  # type: ignore
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+        
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result

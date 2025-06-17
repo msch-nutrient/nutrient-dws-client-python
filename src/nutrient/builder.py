@@ -28,9 +28,20 @@ class BuildAPIWrapper:
         """
         self._client = client
         self._input_file = input_file
-        self._parts: List[Dict[str, Any]] = []
+        self._parts: List[Dict[str, Any]] = [{"file": "file"}]  # Main file
+        self._files: Dict[str, FileInput] = {"file": input_file}  # Track files
         self._actions: List[Dict[str, Any]] = []
         self._output_options: Dict[str, Any] = {}
+
+    def _add_file_part(self, file: FileInput, name: str) -> None:
+        """Add an additional file part for operations like merge.
+        
+        Args:
+            file: File to add.
+            name: Name for the file part.
+        """
+        self._parts.append({"file": name})
+        self._files[name] = file
 
     def add_step(self, tool: str, options: Optional[Dict[str, Any]] = None) -> "BuildAPIWrapper":
         """Add a processing step to the workflow.
@@ -83,9 +94,11 @@ class BuildAPIWrapper:
         # Prepare the build instructions
         instructions = self._build_instructions()
 
-        # Prepare file for upload
-        file_field, file_data = prepare_file_for_upload(self._input_file)
-        files = {file_field: file_data}
+        # Prepare files for upload
+        files = {}
+        for name, file in self._files.items():
+            file_field, file_data = prepare_file_for_upload(file, name)
+            files[file_field] = file_data
 
         # Make API request
         result = self._client._http_client.post(
@@ -107,11 +120,8 @@ class BuildAPIWrapper:
         Returns:
             Instructions dictionary for the Build API.
         """
-        # Add the input file as the first part
         instructions = {
-            "parts": [
-                {"file": "file"}  # Reference to the uploaded file
-            ],
+            "parts": self._parts,
             "actions": self._actions,
         }
 
@@ -156,13 +166,30 @@ class BuildAPIWrapper:
 
         elif action_type == "ocr":
             if "language" in options:
-                action["language"] = options["language"]
+                # Map common language codes to API format
+                lang_map = {
+                    "en": "english",
+                    "de": "deu", 
+                    "eng": "eng",
+                    "deu": "deu",
+                    "german": "deu",
+                }
+                lang = options["language"]
+                action["language"] = lang_map.get(lang, lang)
 
         elif action_type == "watermark":
+            # Watermark requires width/height
+            action["width"] = options.get("width", 200)  # Default width
+            action["height"] = options.get("height", 100)  # Default height
+            
             if "text" in options:
                 action["text"] = options["text"]
-            if "image_url" in options:
+            elif "image_url" in options:
                 action["image"] = {"url": options["image_url"]}
+            else:
+                # Default to text watermark if neither specified
+                action["text"] = "WATERMARK"
+                
             if "opacity" in options:
                 action["opacity"] = options["opacity"]
             if "position" in options:

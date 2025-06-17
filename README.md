@@ -26,10 +26,10 @@ from nutrient import NutrientClient
 # Initialize the client
 client = NutrientClient(api_key="your-api-key")
 
-# Direct API - Convert Office document to PDF
-pdf = client.convert_to_pdf(
-    input_file="document.docx",
-    output_path="converted.pdf"
+# Direct API - Flatten PDF annotations
+client.flatten_annotations(
+    input_file="document.pdf",
+    output_path="flattened.pdf"
 )
 
 # Builder API - Chain multiple operations
@@ -59,20 +59,13 @@ with NutrientClient(api_key="your-api-key") as client:
 
 ## Direct API Examples
 
-### Convert to PDF
+### Flatten Annotations
 
 ```python
-# Convert Office document to PDF
-client.convert_to_pdf(
-    input_file="presentation.pptx",
-    output_path="presentation.pdf"
-)
-
-# Convert with options
-client.convert_to_pdf(
-    input_file="spreadsheet.xlsx",
-    output_path="spreadsheet.pdf",
-    page_range="1-3"
+# Flatten all annotations and form fields
+client.flatten_annotations(
+    input_file="form.pdf",
+    output_path="flattened.pdf"
 )
 ```
 
@@ -119,19 +112,14 @@ client.rotate_pages(
 ### Watermark PDF
 
 ```python
-# Add text watermark
+# Add text watermark (width/height required)
 client.watermark_pdf(
     input_file="document.pdf",
     output_path="watermarked.pdf",
     text="DRAFT",
-    opacity=0.5
-)
-
-# Add image watermark
-client.watermark_pdf(
-    input_file="document.pdf",
-    output_path="watermarked.pdf",
-    image_url="https://example.com/logo.png",
+    width=200,
+    height=100,
+    opacity=0.5,
     position="center"
 )
 ```
@@ -223,42 +211,34 @@ Files larger than 10MB are automatically streamed to avoid memory issues:
 
 ```python
 # This will stream the file instead of loading it into memory
-client.convert_to_pdf("large-presentation.pptx")
+client.flatten_annotations("large-document.pdf")
 ```
 
-## Available Tools
-
-### Document Conversion
-- `convert_to_pdf` - Convert Office documents to PDF
-- `convert_from_pdf` - Convert PDF to Office formats
-- `convert_pdf_page_to_image` - Convert PDF pages to images
-- `import_from_url` - Import documents from URLs
+## Available Operations
 
 ### PDF Manipulation
-- `merge_pdfs` - Merge multiple PDFs
-- `split_pdf` - Split PDF into multiple files
-- `rotate_pages` - Rotate PDF pages
-- `delete_pages` - Remove pages from PDF
-- `duplicate_pages` - Duplicate pages in PDF
-- `move_pages` - Reorder pages in PDF
+- `merge_pdfs` - Merge multiple PDFs into one
+- `rotate_pages` - Rotate PDF pages (all or specific pages)
+- `flatten_annotations` - Flatten form fields and annotations
 
 ### PDF Enhancement
-- `ocr_pdf` - Add searchable text layer
+- `ocr_pdf` - Add searchable text layer (English and German)
 - `watermark_pdf` - Add text or image watermarks
-- `flatten_annotations` - Flatten form fields and annotations
-- `linearize_pdf` - Optimize for web viewing
 
 ### PDF Security
-- `apply_redactions` - Permanently remove sensitive content
-- `create_redactions` - Mark content for redaction
-- `sanitize_pdf` - Remove potentially harmful content
+- `apply_redactions` - Apply existing redaction annotations
 
-### Annotations and Forms
-- `apply_instant_json` - Apply Nutrient Instant JSON annotations
-- `export_instant_json` - Export annotations as Instant JSON
-- `apply_xfdf` - Apply XFDF annotations
-- `export_xfdf` - Export annotations as XFDF
-- `export_pdf_info` - Extract PDF metadata and structure
+### Builder API
+The Builder API allows chaining multiple operations:
+```python
+client.build(input_file="document.pdf") \
+    .add_step("rotate-pages", {"degrees": 90}) \
+    .add_step("ocr-pdf", {"language": "english"}) \
+    .add_step("watermark-pdf", {"text": "DRAFT", "width": 200, "height": 100}) \
+    .execute(output_path="processed.pdf")
+```
+
+Note: See [SUPPORTED_OPERATIONS.md](SUPPORTED_OPERATIONS.md) for detailed documentation of all supported operations and their parameters.
 
 ## Development
 
