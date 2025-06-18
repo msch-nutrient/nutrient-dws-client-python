@@ -80,7 +80,19 @@ jobs:
     - name: Run type checking with mypy
       run: python -m mypy src tests
 
-    - name: Run tests with pytest
+    - name: Run basic test without coverage
+      run: |
+        echo "Running basic test without any plugins:"
+        python -m pytest tests/test_basic.py -v -p no:asyncio -p no:cov
+      continue-on-error: true
+
+    - name: Run all tests without coverage
+      run: |
+        echo "Running all tests without coverage:"
+        python -m pytest -v -p no:asyncio
+      continue-on-error: true
+
+    - name: Run tests with pytest (with coverage)
       run: python -m pytest -v --cov=nutrient_dws --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
