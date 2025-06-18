@@ -16,7 +16,7 @@ def test_client_init_with_env_var():
     """Test client initialization with environment variable."""
     # Save original value
     original = os.environ.get("NUTRIENT_API_KEY")
-    
+
     try:
         os.environ["NUTRIENT_API_KEY"] = "env-key"
         client = NutrientClient()
@@ -33,7 +33,7 @@ def test_client_init_precedence():
     """Test that explicit API key takes precedence over env var."""
     # Save original value
     original = os.environ.get("NUTRIENT_API_KEY")
-    
+
     try:
         os.environ["NUTRIENT_API_KEY"] = "env-key"
         client = NutrientClient(api_key="explicit-key")
