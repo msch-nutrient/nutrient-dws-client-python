@@ -106,16 +106,7 @@ disallow_any_unimported = true
 module = "tests.*"
 disallow_untyped_defs = false
 
-[tool.pytest.ini_options]
-minversion = "7.0"
-testpaths = ["tests"]
-addopts = [
-    "-ra",
-    "--strict-markers",
-]
-markers = [
-    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
-]
+# Pytest configuration moved to pytest.ini
 
 [tool.coverage.run]
 source = ["src/nutrient_dws"]
