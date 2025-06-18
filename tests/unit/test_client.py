@@ -1,7 +1,6 @@
 """Unit tests for NutrientClient."""
 
 import os
-from unittest.mock import patch
 
 from nutrient_dws.client import NutrientClient
 
@@ -15,16 +14,36 @@ def test_client_init_with_api_key():
 
 def test_client_init_with_env_var():
     """Test client initialization with environment variable."""
-    with patch.dict(os.environ, {"NUTRIENT_API_KEY": "env-key"}):
+    # Save original value
+    original = os.environ.get("NUTRIENT_API_KEY")
+    
+    try:
+        os.environ["NUTRIENT_API_KEY"] = "env-key"
         client = NutrientClient()
         assert client._http_client._api_key == "env-key"
+    finally:
+        # Restore original value
+        if original is not None:
+            os.environ["NUTRIENT_API_KEY"] = original
+        else:
+            os.environ.pop("NUTRIENT_API_KEY", None)
 
 
 def test_client_init_precedence():
     """Test that explicit API key takes precedence over env var."""
-    with patch.dict(os.environ, {"NUTRIENT_API_KEY": "env-key"}):
+    # Save original value
+    original = os.environ.get("NUTRIENT_API_KEY")
+    
+    try:
+        os.environ["NUTRIENT_API_KEY"] = "env-key"
         client = NutrientClient(api_key="explicit-key")
         assert client._http_client._api_key == "explicit-key"
+    finally:
+        # Restore original value
+        if original is not None:
+            os.environ["NUTRIENT_API_KEY"] = original
+        else:
+            os.environ.pop("NUTRIENT_API_KEY", None)
 
 
 def test_client_build_method():
