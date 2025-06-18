@@ -1,4 +1,5 @@
 """Root conftest.py to ensure proper test configuration."""
+
 import sys
 from pathlib import Path
 
