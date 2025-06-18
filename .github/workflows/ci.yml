@@ -34,6 +34,44 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
 
+    - name: Debug - Check environment
+      run: |
+        echo "Python version:"
+        python --version
+        echo "Python path:"
+        which python
+        echo "Site packages:"
+        python -c "import site; print(site.getsitepackages())"
+        echo "Current directory:"
+        pwd
+        echo "Directory contents:"
+        ls -la
+        echo "Installed packages:"
+        pip list
+
+    - name: Debug - Test package import
+      run: |
+        echo "Testing direct import:"
+        python -c "import nutrient_dws; print('Import successful:', nutrient_dws.__version__)"
+        echo "Testing submodule imports:"
+        python -c "from nutrient_dws.client import NutrientClient; print('Client import successful')"
+        python -c "from nutrient_dws.exceptions import NutrientError; print('Exceptions import successful')"
+
+    - name: Debug - Check test structure
+      run: |
+        echo "Test directory structure:"
+        find tests -name "*.py" -type f
+        echo "Test __init__ files:"
+        find tests -name "__init__.py" -type f
+        echo "Python path:"
+        python -c "import sys; print('\n'.join(sys.path))"
+
+    - name: Debug - pytest collection dry run
+      run: |
+        echo "Running pytest collection only:"
+        python -m pytest --collect-only -v
+      continue-on-error: true
+
     - name: Run linting with ruff
       run: |
         python -m ruff check .
