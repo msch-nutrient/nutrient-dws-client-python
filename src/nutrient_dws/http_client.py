@@ -8,7 +8,12 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from nutrient_dws.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
+from nutrient_dws.exceptions import (
+    APIError,
+    AuthenticationError,
+    NutrientTimeoutError,
+    ValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +159,7 @@ class HTTPClient:
                 timeout=self._timeout,
             )
         except requests.exceptions.Timeout as e:
-            raise TimeoutError(f"Request timed out after {self._timeout} seconds") from e
+            raise NutrientTimeoutError(f"Request timed out after {self._timeout} seconds") from e
         except requests.exceptions.ConnectionError as e:
             raise APIError(f"Connection error: {e!s}") from e
         except requests.exceptions.RequestException as e:

@@ -9,7 +9,7 @@ from nutrient_dws.exceptions import (
     AuthenticationError,
     FileProcessingError,
     NutrientError,
-    TimeoutError,
+    NutrientTimeoutError,
     ValidationError,
 )
 
@@ -20,6 +20,6 @@ __all__ = [
     "FileProcessingError",
     "NutrientClient",
     "NutrientError",
-    "TimeoutError",
+    "NutrientTimeoutError",
     "ValidationError",
 ]

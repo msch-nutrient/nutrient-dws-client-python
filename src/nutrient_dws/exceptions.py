@@ -71,7 +71,7 @@ class ValidationError(NutrientError):
         self.errors = errors or {}
 
 
-class TimeoutError(NutrientError):
+class NutrientTimeoutError(NutrientError):
     """Raised when a request times out."""
 
     pass

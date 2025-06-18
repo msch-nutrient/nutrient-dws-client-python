@@ -6,7 +6,12 @@ import pytest
 import requests
 import responses
 
-from nutrient_dws.exceptions import APIError, AuthenticationError, TimeoutError, ValidationError
+from nutrient_dws.exceptions import (
+    APIError,
+    AuthenticationError,
+    NutrientTimeoutError,
+    ValidationError,
+)
 from nutrient_dws.http_client import HTTPClient
 
 
@@ -158,7 +163,7 @@ class TestHTTPClient:
         with patch.object(client._session, "post") as mock_post:
             mock_post.side_effect = requests.exceptions.Timeout()
 
-            with pytest.raises(TimeoutError, match="Request timed out"):
+            with pytest.raises(NutrientTimeoutError, match="Request timed out"):
                 client.post("/test")
 
     def test_post_connection_error(self):

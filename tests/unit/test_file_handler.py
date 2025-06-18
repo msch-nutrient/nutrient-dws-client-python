@@ -1,6 +1,7 @@
 """Unit tests for file handling utilities."""
 
 import io
+from typing import Any
 
 import pytest
 
@@ -76,8 +77,9 @@ class TestPrepareFileInput:
 
     def test_unsupported_input_type(self):
         """Test handling of unsupported input type."""
+        invalid_input: Any = 123
         with pytest.raises(ValueError, match="Unsupported file input type"):
-            prepare_file_input(123)  # type: ignore
+            prepare_file_input(invalid_input)
 
 
 class TestPrepareFileForUpload:
@@ -227,6 +229,7 @@ class TestGetFileSize:
             def read(self):
                 return b"content"
 
-        size = get_file_size(NonSeekable())  # type: ignore
+        non_seekable: Any = NonSeekable()
+        size = get_file_size(non_seekable)
 
         assert size is None

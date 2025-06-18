@@ -5,7 +5,7 @@ from nutrient_dws.exceptions import (
     AuthenticationError,
     FileProcessingError,
     NutrientError,
-    TimeoutError,
+    NutrientTimeoutError,
     ValidationError,
 )
 
@@ -110,16 +110,16 @@ class TestValidationError:
         assert exc.errors == errors
 
 
-class TestTimeoutError:
+class TestNutrientTimeoutError:
     """Test timeout error."""
 
     def test_inheritance(self):
-        """Test that TimeoutError inherits from NutrientError."""
-        assert issubclass(TimeoutError, NutrientError)
+        """Test that NutrientTimeoutError inherits from NutrientError."""
+        assert issubclass(NutrientTimeoutError, NutrientError)
 
     def test_instantiation(self):
         """Test basic instantiation."""
-        exc = TimeoutError("Request timed out")
+        exc = NutrientTimeoutError("Request timed out")
         assert str(exc) == "Request timed out"
 
 
