@@ -34,44 +34,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[dev]"
 
-    - name: Debug - Check environment
-      run: |
-        echo "Python version:"
-        python --version
-        echo "Python path:"
-        which python
-        echo "Site packages:"
-        python -c "import site; print(site.getsitepackages())"
-        echo "Current directory:"
-        pwd
-        echo "Directory contents:"
-        ls -la
-        echo "Installed packages:"
-        pip list
-
-    - name: Debug - Test package import
-      run: |
-        echo "Testing direct import:"
-        python -c "import nutrient_dws; print('Import successful:', nutrient_dws.__version__)"
-        echo "Testing submodule imports:"
-        python -c "from nutrient_dws.client import NutrientClient; print('Client import successful')"
-        python -c "from nutrient_dws.exceptions import NutrientError; print('Exceptions import successful')"
-
-    - name: Debug - Check test structure
-      run: |
-        echo "Test directory structure:"
-        find tests -name "*.py" -type f
-        echo "Test __init__ files:"
-        find tests -name "__init__.py" -type f
-        echo "Python path:"
-        python -c "import sys; print('\n'.join(sys.path))"
-
-    - name: Debug - pytest collection dry run
-      run: |
-        echo "Running pytest collection only:"
-        python -m pytest --collect-only -v
-      continue-on-error: true
-
     - name: Run linting with ruff
       run: |
         python -m ruff check .
@@ -80,19 +42,7 @@ jobs:
     - name: Run type checking with mypy
       run: python -m mypy src tests
 
-    - name: Run basic test without coverage
-      run: |
-        echo "Running basic test without any plugins:"
-        python -m pytest tests/test_basic.py -v -p no:asyncio -p no:cov
-      continue-on-error: true
-
-    - name: Run all tests without coverage
-      run: |
-        echo "Running all tests without coverage:"
-        python -m pytest -v -p no:asyncio
-      continue-on-error: true
-
-    - name: Run tests with pytest (with coverage)
+    - name: Run tests with pytest
       run: python -m pytest -v --cov=nutrient_dws --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
