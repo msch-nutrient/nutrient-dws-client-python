@@ -112,10 +112,6 @@ testpaths = ["tests"]
 addopts = [
     "-ra",
     "--strict-markers",
-    "--cov=nutrient_dws",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
 ]
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
