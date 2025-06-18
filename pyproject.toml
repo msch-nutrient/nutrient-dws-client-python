@@ -58,9 +58,6 @@ Documentation = "https://nutrient-dws-client-python.readthedocs.io"
 Repository = "https://github.com/jdrhyne/nutrient-dws-client-python"
 "Bug Tracker" = "https://github.com/jdrhyne/nutrient-dws-client-python/issues"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
 [tool.setuptools.package-data]
 nutrient_dws = ["py.typed"]
 
