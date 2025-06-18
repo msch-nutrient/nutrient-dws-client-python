@@ -153,7 +153,7 @@ class TestHTTPClient:
 
     def test_post_timeout(self):
         """Test request timeout."""
-        client = HTTPClient(api_key="test-key", timeout=0.001)
+        client = HTTPClient(api_key="test-key", timeout=1)
 
         with patch.object(client._session, "post") as mock_post:
             mock_post.side_effect = requests.exceptions.Timeout()

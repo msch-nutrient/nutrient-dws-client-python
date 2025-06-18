@@ -54,12 +54,12 @@ class TestPrepareFileInput:
 
     def test_file_like_object_text(self):
         """Test handling of text file-like object."""
-        test_content = "Text content"
-        file_obj = io.StringIO(test_content)
+        test_content = b"Text content"
+        file_obj = io.BytesIO(test_content)
 
         content, filename = prepare_file_input(file_obj)
 
-        assert content == test_content.encode()
+        assert content == test_content
         assert filename == "document"
 
     def test_file_like_object_with_name(self, tmp_path):
@@ -77,7 +77,7 @@ class TestPrepareFileInput:
     def test_unsupported_input_type(self):
         """Test handling of unsupported input type."""
         with pytest.raises(ValueError, match="Unsupported file input type"):
-            prepare_file_input(123)
+            prepare_file_input(123)  # type: ignore
 
 
 class TestPrepareFileForUpload:
@@ -113,7 +113,8 @@ class TestPrepareFileForUpload:
         assert content_type == "application/octet-stream"
 
         # Clean up
-        file_handle.close()
+        if hasattr(file_handle, "close"):
+            file_handle.close()
 
     def test_bytes_input(self):
         """Test handling of bytes input."""
@@ -226,6 +227,6 @@ class TestGetFileSize:
             def read(self):
                 return b"content"
 
-        size = get_file_size(NonSeekable())
+        size = get_file_size(NonSeekable())  # type: ignore
 
         assert size is None

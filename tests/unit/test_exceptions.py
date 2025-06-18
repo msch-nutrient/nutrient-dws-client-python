@@ -74,7 +74,7 @@ class TestAPIError:
         assert exc.response_body == '{"error": "Internal server error"}'
         assert exc.request_id == "req-123"
         expected = (
-            'Server error | Status: 500 | Request ID: req-123 | '
+            "Server error | Status: 500 | Request ID: req-123 | "
             'Response: {"error": "Internal server error"}'
         )
         assert str(exc) == expected
