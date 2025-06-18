@@ -5,9 +5,8 @@ import pytest
 
 def pytest_configure(config):
     """Add custom markers for integration tests."""
-    config.addinivalue_line(
-        "markers", "integration: mark test as an integration test that requires API access"
-    )
+    # Marker is already defined in pyproject.toml
+    pass
 
 
 def pytest_collection_modifyitems(config, items):
