@@ -299,10 +299,7 @@ class DirectAPIMixin:
             files = {file_field: file_data}
 
             # Build instructions for page extraction
-            instructions = {
-                "parts": [{"file": "file", "pages": page_range}],
-                "actions": []
-            }
+            instructions = {"parts": [{"file": "file", "pages": page_range}], "actions": []}
 
             # Make API request
             # Type checking: at runtime, self is NutrientClient which has _http_client
