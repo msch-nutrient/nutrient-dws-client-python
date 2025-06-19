@@ -3,7 +3,6 @@
 These tests require a valid API key configured in integration_config.py.
 """
 
-
 import pytest
 
 from nutrient_dws import NutrientClient
