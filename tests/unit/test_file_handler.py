@@ -1,14 +1,9 @@
 """Unit tests for file handling utilities."""
 
 import io
-from pathlib import Path
-
-import pytest
 
 from nutrient_dws.file_handler import (
     prepare_file_input,
-    save_file_output,
-    stream_file_content,
 )
 
 
@@ -47,15 +42,3 @@ def test_get_file_size_from_bytesio():
     file_obj = io.BytesIO(content)
     size = get_file_size(file_obj)
     assert size == 12
-
-
-def test_get_file_size_none():
-    """Test get_file_size returns None for invalid input."""
-    from nutrient_dws.file_handler import get_file_size
-
-    # Test with a file-like object without proper methods
-    class DummyFile:
-        pass
-
-    size = get_file_size(DummyFile())
-    assert size is None

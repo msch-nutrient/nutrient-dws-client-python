@@ -1,8 +1,5 @@
 """Unit tests for HTTPClient."""
 
-import pytest
-
-from nutrient_dws.exceptions import APIError, AuthenticationError, NutrientTimeoutError
 from nutrient_dws.http_client import HTTPClient
 
 
