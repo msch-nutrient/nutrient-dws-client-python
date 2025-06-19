@@ -214,3 +214,62 @@ class TestLiveAPI:
         """Test duplicate_pdf_pages method with empty page_indexes raises error."""
         with pytest.raises(ValueError, match="page_indexes cannot be empty"):
             client.duplicate_pdf_pages(sample_pdf_path, page_indexes=[])
+
+    def test_delete_pdf_pages_basic(self, client, sample_pdf_path):
+        """Test delete_pdf_pages method with basic page deletion."""
+        # Test deleting first page (assuming sample PDF has at least 2 pages)
+        result = client.delete_pdf_pages(sample_pdf_path, page_indexes=[0])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_delete_pdf_pages_multiple(self, client, sample_pdf_path):
+        """Test delete_pdf_pages method with multiple page deletion."""
+        # Test deleting multiple pages
+        result = client.delete_pdf_pages(sample_pdf_path, page_indexes=[0, 2])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_delete_pdf_pages_with_output_file(self, client, sample_pdf_path, tmp_path):
+        """Test delete_pdf_pages method saving to output file."""
+        output_path = str(tmp_path / "pages_deleted.pdf")
+
+        # Test deleting pages and saving to file
+        result = client.delete_pdf_pages(sample_pdf_path, page_indexes=[1], output_path=output_path)
+
+        # Should return None when saving to file
+        assert result is None
+
+        # Check that output file was created
+        assert (tmp_path / "pages_deleted.pdf").exists()
+        assert (tmp_path / "pages_deleted.pdf").stat().st_size > 0
+        assert_is_pdf(output_path)
+
+    def test_delete_pdf_pages_negative_indexes_error(self, client, sample_pdf_path):
+        """Test delete_pdf_pages method with negative indexes raises error."""
+        # Currently negative indexes are not supported for deletion
+        with pytest.raises(ValueError, match="Negative page indexes not yet supported"):
+            client.delete_pdf_pages(sample_pdf_path, page_indexes=[-1])
+
+    def test_delete_pdf_pages_empty_indexes_error(self, client, sample_pdf_path):
+        """Test delete_pdf_pages method with empty page_indexes raises error."""
+        with pytest.raises(ValueError, match="page_indexes cannot be empty"):
+            client.delete_pdf_pages(sample_pdf_path, page_indexes=[])
+
+    def test_delete_pdf_pages_duplicate_indexes(self, client, sample_pdf_path):
+        """Test delete_pdf_pages method with duplicate page indexes."""
+        # Test that duplicate indexes are handled correctly (should remove duplicates)
+        result = client.delete_pdf_pages(sample_pdf_path, page_indexes=[0, 0, 1])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
