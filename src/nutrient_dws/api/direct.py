@@ -626,14 +626,14 @@ class DirectAPIMixin:
         files = {file_field: file_data}
 
         # Build parts for the document
-        parts: List[Dict[str, Any]] = []
+        parts = []
 
         if after_page_index is None:
             # Add original document first, then new pages at the end
             parts.append({"file": "file"})
 
             # Add new pages
-            parts.append({
+            parts.append({  # type: ignore[dict-item]
                 "page": "new",
                 "pageCount": page_count,
                 "layout": {
@@ -650,10 +650,10 @@ class DirectAPIMixin:
         else:
             # Add pages before the insertion point
             if after_page_index >= 0:
-                parts.append({"file": "file", "pages": {"start": 0, "end": after_page_index + 1}})
+                parts.append({"file": "file", "pages": {"start": 0, "end": after_page_index + 1}})  # type: ignore[dict-item]
 
             # Add new pages
-            parts.append({
+            parts.append({  # type: ignore[dict-item]
                 "page": "new",
                 "pageCount": page_count,
                 "layout": {
@@ -669,7 +669,7 @@ class DirectAPIMixin:
             })
 
             # Add remaining pages after the insertion point
-            parts.append({"file": "file", "pages": {"start": after_page_index + 1}})
+            parts.append({"file": "file", "pages": {"start": after_page_index + 1}})  # type: ignore[dict-item]
 
         # Build instructions for adding pages
         instructions = {"parts": parts, "actions": []}
