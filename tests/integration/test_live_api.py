@@ -273,3 +273,47 @@ class TestLiveAPI:
 
         # Verify result is a valid PDF
         assert_is_pdf(result)
+
+    @pytest.fixture
+    def sample_docx_path(self):
+        """Get path to sample DOCX file for testing."""
+        import os
+
+        return os.path.join(os.path.dirname(__file__), "..", "data", "sample.docx")
+
+    def test_convert_to_pdf_from_docx(self, client, sample_docx_path):
+        """Test convert_to_pdf method with DOCX input."""
+        # Test converting DOCX to PDF and getting bytes back
+        result = client.convert_to_pdf(sample_docx_path)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_convert_to_pdf_with_output_file(self, client, sample_docx_path, tmp_path):
+        """Test convert_to_pdf method saving to output file."""
+        output_path = str(tmp_path / "converted.pdf")
+
+        # Test converting and saving to file
+        result = client.convert_to_pdf(sample_docx_path, output_path=output_path)
+
+        # Should return None when saving to file
+        assert result is None
+
+        # Check that output file was created
+        assert (tmp_path / "converted.pdf").exists()
+        assert (tmp_path / "converted.pdf").stat().st_size > 0
+        assert_is_pdf(output_path)
+
+    def test_convert_to_pdf_from_pdf_passthrough(self, client, sample_pdf_path):
+        """Test convert_to_pdf method with PDF input (should pass through)."""
+        # Test that PDF input passes through unchanged
+        result = client.convert_to_pdf(sample_pdf_path)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
