@@ -13,7 +13,7 @@ name = "nutrient-dws"
 version = "1.0.0"
 description = "Python client library for Nutrient Document Web Services API"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Nutrient", email = "support@nutrient.io"},
@@ -25,8 +25,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -62,7 +60,7 @@ Repository = "https://github.com/jdrhyne/nutrient-dws-client-python"
 nutrient_dws = ["py.typed"]
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py310"
 line-length = 100
 
 [tool.ruff.lint]
@@ -93,7 +91,7 @@ convention = "google"
 "tests/*" = ["D", "S101"]  # Don't require docstrings in tests, allow asserts
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_ignores = false

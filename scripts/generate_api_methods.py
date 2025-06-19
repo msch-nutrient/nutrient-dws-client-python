@@ -3,7 +3,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 def to_snake_case(name: str) -> str:
@@ -15,7 +15,7 @@ def to_snake_case(name: str) -> str:
     return name
 
 
-def get_python_type(schema: Dict[str, Any]) -> str:
+def get_python_type(schema: dict[str, Any]) -> str:
     """Convert OpenAPI schema type to Python type hint."""
     if not schema:
         return "Any"
@@ -33,7 +33,7 @@ def get_python_type(schema: Dict[str, Any]) -> str:
     return type_mapping.get(schema_type, "Any")
 
 
-def create_manual_tools() -> List[Dict[str, Any]]:
+def create_manual_tools() -> list[dict[str, Any]]:
     """Create tool definitions based on the specification documentation.
 
     Since the Nutrient API uses a build endpoint with actions rather than
@@ -218,7 +218,7 @@ def create_manual_tools() -> List[Dict[str, Any]]:
     return tools
 
 
-def generate_method_code(tool_info: Dict[str, Any]) -> str:
+def generate_method_code(tool_info: dict[str, Any]) -> str:
     """Generate Python method code for a tool."""
     method_name = tool_info["method_name"]
     tool_name = tool_info["tool_name"]

@@ -4,7 +4,7 @@ This file provides convenient methods that wrap the Nutrient Build API
 for supported document processing operations.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from nutrient_dws.file_handler import FileInput
 
@@ -40,17 +40,17 @@ class DirectAPIMixin:
         self,
         tool: str,
         input_file: FileInput,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         **options: Any,
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """Process file method that will be provided by NutrientClient."""
         raise NotImplementedError("This method is provided by NutrientClient")
 
     def convert_to_pdf(
         self,
         input_file: FileInput,
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
+        output_path: str | None = None,
+    ) -> bytes | None:
         """Convert a document to PDF.
 
         Converts Office documents (DOCX, XLSX, PPTX) to PDF format.
@@ -76,8 +76,8 @@ class DirectAPIMixin:
         return self.build(input_file).execute(output_path)  # type: ignore[attr-defined,no-any-return]
 
     def flatten_annotations(
-        self, input_file: FileInput, output_path: Optional[str] = None
-    ) -> Optional[bytes]:
+        self, input_file: FileInput, output_path: str | None = None
+    ) -> bytes | None:
         """Flatten annotations and form fields in a PDF.
 
         Converts all annotations and form fields into static page content.
@@ -99,10 +99,10 @@ class DirectAPIMixin:
     def rotate_pages(
         self,
         input_file: FileInput,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         degrees: int = 0,
-        page_indexes: Optional[List[int]] = None,
-    ) -> Optional[bytes]:
+        page_indexes: list[int] | None = None,
+    ) -> bytes | None:
         """Rotate pages in a PDF.
 
         Rotate all pages or specific pages by the specified degrees.
@@ -129,9 +129,9 @@ class DirectAPIMixin:
     def ocr_pdf(
         self,
         input_file: FileInput,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         language: str = "english",
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """Apply OCR to a PDF to make it searchable.
 
         Performs optical character recognition on the PDF to extract text
@@ -156,14 +156,14 @@ class DirectAPIMixin:
     def watermark_pdf(
         self,
         input_file: FileInput,
-        output_path: Optional[str] = None,
-        text: Optional[str] = None,
-        image_url: Optional[str] = None,
+        output_path: str | None = None,
+        text: str | None = None,
+        image_url: str | None = None,
         width: int = 200,
         height: int = 100,
         opacity: float = 1.0,
         position: str = "center",
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """Add a watermark to a PDF.
 
         Adds a text or image watermark to all pages of the PDF.
@@ -209,8 +209,8 @@ class DirectAPIMixin:
     def apply_redactions(
         self,
         input_file: FileInput,
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
+        output_path: str | None = None,
+    ) -> bytes | None:
         """Apply redaction annotations to permanently remove content.
 
         Applies any redaction annotations in the PDF to permanently remove
@@ -233,9 +233,9 @@ class DirectAPIMixin:
     def split_pdf(
         self,
         input_file: FileInput,
-        page_ranges: Optional[List[Dict[str, int]]] = None,
-        output_paths: Optional[List[str]] = None,
-    ) -> List[bytes]:
+        page_ranges: list[dict[str, int]] | None = None,
+        output_paths: list[str] | None = None,
+    ) -> list[bytes]:
         """Split a PDF into multiple documents by page ranges.
 
         Splits a PDF into multiple files based on specified page ranges.
@@ -320,9 +320,9 @@ class DirectAPIMixin:
     def duplicate_pdf_pages(
         self,
         input_file: FileInput,
-        page_indexes: List[int],
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
+        page_indexes: list[int],
+        output_path: str | None = None,
+    ) -> bytes | None:
         """Duplicate specific pages within a PDF document.
 
         Creates a new PDF containing the specified pages in the order provided.
@@ -404,9 +404,9 @@ class DirectAPIMixin:
     def delete_pdf_pages(
         self,
         input_file: FileInput,
-        page_indexes: List[int],
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
+        page_indexes: list[int],
+        output_path: str | None = None,
+    ) -> bytes | None:
         """Delete specific pages from a PDF document.
 
         Creates a new PDF with the specified pages removed. The API approach
@@ -544,9 +544,9 @@ class DirectAPIMixin:
 
     def merge_pdfs(
         self,
-        input_files: List[FileInput],
-        output_path: Optional[str] = None,
-    ) -> Optional[bytes]:
+        input_files: list[FileInput],
+        output_path: str | None = None,
+    ) -> bytes | None:
         """Merge multiple PDF files into one.
 
         Combines multiple files into a single PDF in the order provided.

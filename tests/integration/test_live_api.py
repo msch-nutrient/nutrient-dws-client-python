@@ -3,8 +3,6 @@
 These tests require a valid API key configured in integration_config.py.
 """
 
-from typing import Union
-
 import pytest
 
 from nutrient_dws import NutrientClient
@@ -21,13 +19,13 @@ except ImportError:
     TIMEOUT = 60
 
 
-def assert_is_pdf(file_path_or_bytes: Union[str, bytes]) -> None:
+def assert_is_pdf(file_path_or_bytes: str | bytes) -> None:
     """Assert that a file or bytes is a valid PDF.
 
     Args:
         file_path_or_bytes: Path to file or bytes content to check.
     """
-    if isinstance(file_path_or_bytes, (str, bytes)):
+    if isinstance(file_path_or_bytes, str | bytes):
         if isinstance(file_path_or_bytes, str):
             with open(file_path_or_bytes, "rb") as f:
                 content = f.read(8)
