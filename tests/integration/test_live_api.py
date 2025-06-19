@@ -386,10 +386,10 @@ class TestLiveAPI:
         # Verify result is a valid PDF
         assert_is_pdf(result)
 
-    def test_add_page_basic(self, client, sample_pdf_path):
-        """Test add_page method with basic page addition."""
-        # Test adding a single blank page after first page
-        result = client.add_page(sample_pdf_path, insert_after_page=0)
+    def test_add_page_at_beginning(self, client, sample_pdf_path):
+        """Test add_page method inserting at the beginning."""
+        # Test inserting at beginning (insert_index=0)
+        result = client.add_page(sample_pdf_path, insert_index=0)
 
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -399,19 +399,8 @@ class TestLiveAPI:
 
     def test_add_page_multiple_pages(self, client, sample_pdf_path):
         """Test add_page method with multiple pages."""
-        # Test adding multiple blank pages
-        result = client.add_page(sample_pdf_path, insert_after_page=1, page_count=3)
-
-        assert isinstance(result, bytes)
-        assert len(result) > 0
-
-        # Verify result is a valid PDF
-        assert_is_pdf(result)
-
-    def test_add_page_at_beginning(self, client, sample_pdf_path):
-        """Test add_page method inserting at the beginning."""
-        # Test inserting at beginning using -1
-        result = client.add_page(sample_pdf_path, insert_after_page=-1, page_count=2)
+        # Test adding multiple blank pages before second page
+        result = client.add_page(sample_pdf_path, insert_index=1, page_count=3)
 
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -421,8 +410,19 @@ class TestLiveAPI:
 
     def test_add_page_at_end(self, client, sample_pdf_path):
         """Test add_page method inserting at the end."""
-        # Test inserting at end (sample PDF has 6 pages, so insert after page 4)
-        result = client.add_page(sample_pdf_path, insert_after_page=4, page_count=1)
+        # Test inserting at end using -1
+        result = client.add_page(sample_pdf_path, insert_index=-1, page_count=2)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_add_page_before_specific_page(self, client, sample_pdf_path):
+        """Test add_page method inserting before a specific page."""
+        # Test inserting before page 3 (insert_index=2)
+        result = client.add_page(sample_pdf_path, insert_index=2, page_count=1)
 
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -432,10 +432,10 @@ class TestLiveAPI:
 
     def test_add_page_custom_size_orientation(self, client, sample_pdf_path):
         """Test add_page method with custom page size and orientation."""
-        # Test adding Letter-sized landscape pages
+        # Test adding Letter-sized landscape pages at beginning
         result = client.add_page(
             sample_pdf_path,
-            insert_after_page=0,
+            insert_index=0,
             page_size="Letter",
             orientation="landscape",
             page_count=2,
@@ -453,7 +453,7 @@ class TestLiveAPI:
 
         # Test adding pages and saving to file
         result = client.add_page(
-            sample_pdf_path, insert_after_page=1, page_count=2, output_path=output_path
+            sample_pdf_path, insert_index=1, page_count=2, output_path=output_path
         )
 
         # Should return None when saving to file
@@ -470,7 +470,7 @@ class TestLiveAPI:
         page_sizes = ["A4", "Letter", "Legal", "A3", "A5"]
 
         for page_size in page_sizes:
-            result = client.add_page(sample_pdf_path, insert_after_page=0, page_size=page_size)
+            result = client.add_page(sample_pdf_path, insert_index=0, page_size=page_size)
 
             assert isinstance(result, bytes)
             assert len(result) > 0
@@ -480,8 +480,17 @@ class TestLiveAPI:
         """Test add_page method with invalid page_count raises error."""
         # Test zero page count
         with pytest.raises(ValueError, match="page_count must be at least 1"):
-            client.add_page(sample_pdf_path, insert_after_page=0, page_count=0)
+            client.add_page(sample_pdf_path, insert_index=0, page_count=0)
 
         # Test negative page count
         with pytest.raises(ValueError, match="page_count must be at least 1"):
-            client.add_page(sample_pdf_path, insert_after_page=0, page_count=-1)
+            client.add_page(sample_pdf_path, insert_index=0, page_count=-1)
+
+    def test_add_page_invalid_position_error(self, client, sample_pdf_path):
+        """Test add_page method with invalid insert_index raises error."""
+        # Test invalid negative position (anything below -1)
+        with pytest.raises(ValueError, match="insert_index must be -1"):
+            client.add_page(sample_pdf_path, insert_index=-2, page_count=1)
+
+        with pytest.raises(ValueError, match="insert_index must be -1"):
+            client.add_page(sample_pdf_path, insert_index=-5, page_count=1)
