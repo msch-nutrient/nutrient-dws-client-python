@@ -221,6 +221,41 @@ client.duplicate_pdf_pages(
 )
 ```
 
+### 10. `delete_pdf_pages(input_file, page_indexes, output_path=None)`
+Deletes specific pages from a PDF document.
+
+**Parameters:**
+- `input_file`: PDF file to process
+- `page_indexes`: List of page indexes to delete (0-based). Duplicates are automatically removed.
+- `output_path`: Optional path to save the output file
+
+**Returns:**
+- Processed PDF as bytes, or None if `output_path` provided
+
+**Note:** Negative page indexes are not currently supported.
+
+**Example:**
+```python
+# Delete first and third pages
+result = client.delete_pdf_pages(
+    "document.pdf", 
+    page_indexes=[0, 2]  # Delete pages 1 and 3 (0-based indexing)
+)
+
+# Delete specific pages with duplicates (duplicates ignored)
+result = client.delete_pdf_pages(
+    "document.pdf",
+    page_indexes=[1, 3, 1, 5]  # Effectively deletes pages 2, 4, and 6
+)
+
+# Save to specific file
+client.delete_pdf_pages(
+    "document.pdf",
+    page_indexes=[0, 1],  # Delete first two pages
+    output_path="trimmed_document.pdf"
+)
+```
+
 ## Builder API
 
 The Builder API allows chaining multiple operations. Like the Direct API, it automatically converts Office documents to PDF when needed:
