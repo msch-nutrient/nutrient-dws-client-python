@@ -609,7 +609,7 @@ class DirectAPIMixin:
     def add_page(
         self,
         input_file: FileInput,
-        insert_after_page: int,
+        insert_index: int,
         page_count: int = 1,
         page_size: str = "A4",
         orientation: str = "portrait",
@@ -617,14 +617,14 @@ class DirectAPIMixin:
     ) -> bytes | None:
         """Add blank pages to a PDF document.
 
-        Inserts blank pages at the specified position in the document.
-        The new pages will be inserted after the specified page index.
+        Inserts blank pages at the specified insertion index in the document.
 
         Args:
             input_file: Input PDF file.
-            insert_after_page: Page index to insert after (0-based).
-                              Use -1 to insert at the end of the document.
-                              Use a page index to insert after that specific page.
+            insert_index: Position to insert pages (0-based insertion index).
+                         0 = insert before first page (at beginning)
+                         1 = insert before second page (after first page)
+                         -1 = insert after last page (at end)
             page_count: Number of blank pages to add (default: 1).
             page_size: Page size for new pages. Common values: "A4", "Letter",
                       "Legal", "A3", "A5" (default: "A4").
@@ -638,26 +638,26 @@ class DirectAPIMixin:
         Raises:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
-            ValueError: If page_count is less than 1 or if insert_after_page is
+            ValueError: If page_count is less than 1 or if insert_index is
                        a negative number other than -1.
 
         Examples:
-            # Add a single blank page after page 2
-            result = client.add_page("document.pdf", insert_after_page=2)
+            # Add a single blank page at the beginning
+            result = client.add_page("document.pdf", insert_index=0)
 
             # Add multiple pages at the end
             result = client.add_page(
                 "document.pdf",
-                insert_after_page=-1,  # Insert at end
+                insert_index=-1,  # Insert at end
                 page_count=3,
                 page_size="Letter",
                 orientation="landscape"
             )
 
-            # Add pages after first page and save to file
+            # Add pages before third page and save to file
             client.add_page(
                 "document.pdf",
-                insert_after_page=0,  # Insert after first page
+                insert_index=2,  # Insert before third page
                 page_count=2,
                 output_path="with_blank_pages.pdf"
             )
@@ -667,8 +667,8 @@ class DirectAPIMixin:
         # Validate inputs
         if page_count < 1:
             raise ValueError("page_count must be at least 1")
-        if insert_after_page < -1:
-            raise ValueError("insert_after_page must be -1 (for end) or a non-negative page index")
+        if insert_index < -1:
+            raise ValueError("insert_index must be -1 (for end) or a non-negative insertion index")
 
         # Prepare file for upload
         file_field, file_data = prepare_file_for_upload(input_file, "file")
@@ -677,37 +677,34 @@ class DirectAPIMixin:
         # Build parts array
         parts: list[dict[str, Any]] = []
 
-        if insert_after_page == -1:
+        # Create new page part
+        new_page_part = {
+            "page": "new",
+            "pageCount": page_count,
+            "layout": {
+                "size": page_size,
+                "orientation": orientation,
+            },
+        }
+
+        if insert_index == -1:
             # Insert at end: add all original pages first, then new pages
             parts.append({"file": "file"})
-            new_page_part = {
-                "page": "new",
-                "pageCount": page_count,
-                "layout": {
-                    "size": page_size,
-                    "orientation": orientation,
-                },
-            }
             parts.append(new_page_part)
+        elif insert_index == 0:
+            # Insert at beginning: add new pages first, then all original pages
+            parts.append(new_page_part)
+            parts.append({"file": "file"})
         else:
-            # Insert after a specific page:
-            # First add pages from start to insertion point (inclusive)
-            parts.append({"file": "file", "pages": {"start": 0, "end": insert_after_page + 1}})
+            # Insert at specific position: split original document
+            # Add pages from start up to insertion point (0 to insert_index-1)
+            parts.append({"file": "file", "pages": {"start": 0, "end": insert_index}})
 
             # Add new blank pages
-            new_page_part = {
-                "page": "new",
-                "pageCount": page_count,
-                "layout": {
-                    "size": page_size,
-                    "orientation": orientation,
-                },
-            }
             parts.append(new_page_part)
 
-            # Add remaining pages after insertion point (if any)
-            # Only add this part if there are pages after the insertion point
-            parts.append({"file": "file", "pages": {"start": insert_after_page + 1}})
+            # Add remaining pages from insertion point to end
+            parts.append({"file": "file", "pages": {"start": insert_index}})
 
         # Build instructions for adding pages
         instructions = {"parts": parts, "actions": []}
