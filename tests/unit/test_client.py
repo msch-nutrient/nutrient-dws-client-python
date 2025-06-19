@@ -159,11 +159,17 @@ def test_set_page_label_valid_config():
 
         result = client.set_page_label("test.pdf", labels)
 
+        # Expected normalized labels (implementation adds 'end': -1 when missing)
+        expected_normalized_labels = [
+            {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+            {"pages": {"start": 3, "end": -1}, "label": "Content"},
+        ]
+
         # Verify the API call was made with correct parameters
         mock_http_client.post.assert_called_once_with(
             "/build",
             files={"file": ("filename.pdf", b"mock_file_data", "application/pdf")},
-            json_data={"parts": [{"file": "file"}], "actions": [], "output": {"labels": labels}},
+            json_data={"parts": [{"file": "file"}], "actions": [], "output": {"labels": expected_normalized_labels}},
         )
 
         # Verify result
