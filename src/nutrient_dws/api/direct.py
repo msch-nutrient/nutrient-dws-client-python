@@ -605,3 +605,113 @@ class DirectAPIMixin:
             return None
         else:
             return result  # type: ignore[no-any-return]
+
+    def add_page(
+        self,
+        input_file: FileInput,
+        insert_after_page: int,
+        page_count: int = 1,
+        page_size: str = "A4",
+        orientation: str = "portrait",
+        output_path: str | None = None,
+    ) -> bytes | None:
+        """Add blank pages to a PDF document.
+
+        Inserts blank pages at the specified position in the document.
+        The new pages will be inserted after the specified page index.
+
+        Args:
+            input_file: Input PDF file.
+            insert_after_page: Page index to insert after (0-based).
+                              Use -1 to insert at the beginning.
+                              Use a large number to insert at the end.
+            page_count: Number of blank pages to add (default: 1).
+            page_size: Page size for new pages. Common values: "A4", "Letter",
+                      "Legal", "A3", "A5" (default: "A4").
+            orientation: Page orientation. Either "portrait" or "landscape"
+                        (default: "portrait").
+            output_path: Optional path to save the output file.
+
+        Returns:
+            Processed PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If page_count is less than 1.
+
+        Examples:
+            # Add a single blank page after page 2
+            result = client.add_page("document.pdf", insert_after_page=2)
+
+            # Add multiple pages at the beginning
+            result = client.add_page(
+                "document.pdf",
+                insert_after_page=-1,  # Insert at beginning
+                page_count=3,
+                page_size="Letter",
+                orientation="landscape"
+            )
+
+            # Add pages at the end and save to file
+            client.add_page(
+                "document.pdf",
+                insert_after_page=999,  # Insert at end
+                page_count=2,
+                output_path="with_blank_pages.pdf"
+            )
+        """
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
+        # Validate inputs
+        if page_count < 1:
+            raise ValueError("page_count must be at least 1")
+
+        # Prepare file for upload
+        file_field, file_data = prepare_file_for_upload(input_file, "file")
+        files = {file_field: file_data}
+
+        # Build parts array
+        parts: list[dict[str, Any]] = []
+
+        # Add existing document pages before insertion point
+        if insert_after_page >= 0:
+            # Add pages from start to insertion point (inclusive)
+            parts.append({"file": "file", "pages": {"start": 0, "end": insert_after_page + 1}})
+
+        # Add new blank pages
+        new_page_part = {
+            "page": "new",
+            "pageCount": page_count,
+            "layout": {
+                "size": page_size,
+                "orientation": orientation,
+            },
+        }
+        parts.append(new_page_part)
+
+        # Add remaining pages after insertion point
+        if insert_after_page >= 0:
+            # Add pages from after insertion point to end
+            parts.append({"file": "file", "pages": {"start": insert_after_page + 1}})
+        else:
+            # If inserting at beginning (insert_after_page = -1), add all original pages
+            parts.append({"file": "file"})
+
+        # Build instructions for adding pages
+        instructions = {"parts": parts, "actions": []}
+
+        # Make API request
+        # Type checking: at runtime, self is NutrientClient which has _http_client
+        result = self._http_client.post(  # type: ignore[attr-defined]
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result  # type: ignore[no-any-return]
