@@ -2,57 +2,59 @@
 
 import io
 import os
+from collections.abc import Generator
 from pathlib import Path
-from typing import BinaryIO, Generator, Optional, Tuple, Union
+from typing import BinaryIO
 
-FileInput = Union[str, Path, bytes, BinaryIO]
+FileInput = str | Path | bytes | BinaryIO
 
 # Default chunk size for streaming operations (1MB)
 DEFAULT_CHUNK_SIZE = 1024 * 1024
 
 
-def prepare_file_input(file_input: FileInput) -> Tuple[bytes, str]:
+def prepare_file_input(file_input: FileInput) -> tuple[bytes, str]:
     """Convert various file input types to bytes.
 
     Args:
         file_input: File path, bytes, or file-like object.
 
     Returns:
-        Tuple of (file_bytes, filename).
+        tuple of (file_bytes, filename).
 
     Raises:
         FileNotFoundError: If file path doesn't exist.
         ValueError: If input type is not supported.
     """
-    # Handle Path objects
-    if isinstance(file_input, Path):
-        if not file_input.exists():
+    # Handle different file input types using pattern matching
+    match file_input:
+        case Path() if not file_input.exists():
             raise FileNotFoundError(f"File not found: {file_input}")
-        return file_input.read_bytes(), file_input.name
-    elif isinstance(file_input, str):
-        path = Path(file_input)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_input}")
-        return path.read_bytes(), path.name
-    elif isinstance(file_input, bytes):
-        return file_input, "document"
-    elif hasattr(file_input, "read"):
-        # Handle file-like objects
-        content = file_input.read()
-        if isinstance(content, str):
-            content = content.encode()
-        filename = getattr(file_input, "name", "document")
-        if hasattr(filename, "__fspath__") or isinstance(filename, (str, bytes)):
-            filename = os.path.basename(filename)
-        return content, str(filename)
-    else:
-        raise ValueError(f"Unsupported file input type: {type(file_input)}")
+        case Path():
+            return file_input.read_bytes(), file_input.name
+        case str():
+            path = Path(file_input)
+            if not path.exists():
+                raise FileNotFoundError(f"File not found: {file_input}")
+            return path.read_bytes(), path.name
+        case bytes():
+            return file_input, "document"
+        case _ if hasattr(file_input, "read"):
+            # Handle file-like objects
+            content = file_input.read()
+            if isinstance(content, str):
+                content = content.encode()
+            filename = getattr(file_input, "name", "document")
+            if hasattr(filename, "__fspath__") or isinstance(filename, str | bytes):
+                filename = os.path.basename(filename)
+            return content, str(filename)
+        case _:
+            raise ValueError(f"Unsupported file input type: {type(file_input)}")
 
 
 def prepare_file_for_upload(
     file_input: FileInput,
     field_name: str = "file",
-) -> Tuple[str, Tuple[str, Union[bytes, BinaryIO], str]]:
+) -> tuple[str, tuple[str, bytes | BinaryIO, str]]:
     """Prepare file for multipart upload.
 
     Args:
@@ -60,7 +62,7 @@ def prepare_file_for_upload(
         field_name: Form field name for the file.
 
     Returns:
-        Tuple of (field_name, (filename, file_content_or_stream, content_type)).
+        tuple of (field_name, (filename, file_content_or_stream, content_type)).
 
     Raises:
         FileNotFoundError: If file path doesn't exist.
@@ -68,14 +70,20 @@ def prepare_file_for_upload(
     """
     content_type = "application/octet-stream"
 
-    # Handle Path objects
-    if isinstance(file_input, Path):
-        file_input = str(file_input)
+    # Handle different file input types using pattern matching
+    path: Path | None
+    match file_input:
+        case Path():
+            path = file_input
+        case str():
+            path = Path(file_input)
+        case _:
+            path = None
 
-    if isinstance(file_input, str):
-        path = Path(file_input)
+    # Handle path-based inputs
+    if path is not None:
         if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_input}")
+            raise FileNotFoundError(f"File not found: {path}")
 
         # For large files, return file handle instead of reading into memory
         file_size = path.stat().st_size
@@ -87,17 +95,17 @@ def prepare_file_for_upload(
         else:
             return field_name, (path.name, path.read_bytes(), content_type)
 
-    elif isinstance(file_input, bytes):
-        return field_name, ("document", file_input, content_type)
-
-    elif hasattr(file_input, "read"):
-        filename = getattr(file_input, "name", "document")
-        if hasattr(filename, "__fspath__"):
-            filename = os.path.basename(filename)
-        return field_name, (str(filename), file_input, content_type)
-
-    else:
-        raise ValueError(f"Unsupported file input type: {type(file_input)}")
+    # Handle non-path inputs
+    match file_input:
+        case bytes():
+            return field_name, ("document", file_input, content_type)
+        case _ if hasattr(file_input, "read"):
+            filename = getattr(file_input, "name", "document")
+            if hasattr(filename, "__fspath__"):
+                filename = os.path.basename(filename)
+            return field_name, (str(filename), file_input, content_type)  # type: ignore[return-value]
+        case _:
+            raise ValueError(f"Unsupported file input type: {type(file_input)}")
 
 
 def save_file_output(content: bytes, output_path: str) -> None:
@@ -141,7 +149,7 @@ def stream_file_content(
             yield chunk
 
 
-def get_file_size(file_input: FileInput) -> Optional[int]:
+def get_file_size(file_input: FileInput) -> int | None:
     """Get size of file input if available.
 
     Args:

@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class HTTPClient:
     """HTTP client with connection pooling and retry logic."""
 
-    def __init__(self, api_key: Optional[str], timeout: int = 300) -> None:
+    def __init__(self, api_key: str | None, timeout: int = 300) -> None:
         """Initialize HTTP client with authentication.
 
         Args:
@@ -120,9 +120,9 @@ class HTTPClient:
     def post(
         self,
         endpoint: str,
-        files: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
-        json_data: Optional[Dict[str, Any]] = None,
+        files: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        json_data: dict[str, Any] | None = None,
     ) -> bytes:
         """Make POST request to API.
 
