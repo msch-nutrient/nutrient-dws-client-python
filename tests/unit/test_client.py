@@ -70,6 +70,7 @@ def test_client_has_direct_api_methods():
     assert hasattr(client, "split_pdf")
     assert hasattr(client, "duplicate_pdf_pages")
     assert hasattr(client, "delete_pdf_pages")
+    assert hasattr(client, "add_page")
 
 
 def test_client_context_manager():

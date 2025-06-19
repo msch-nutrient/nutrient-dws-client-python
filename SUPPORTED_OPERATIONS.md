@@ -256,6 +256,57 @@ client.delete_pdf_pages(
 )
 ```
 
+### 11. `add_page(input_file, output_path=None, *, page_count=1, after_page_index=None, orientation="portrait", size="A4", margin_left=72, margin_top=72, margin_right=72, margin_bottom=72)`
+Adds blank pages to a PDF document at the specified position.
+
+**Parameters:**
+- `input_file`: PDF file or Office document to process
+- `output_path`: Optional path to save the output file
+- `page_count`: Number of blank pages to add (default: 1)
+- `after_page_index`: Page index after which to insert pages (0-based). If None, pages are added at the end.
+- `orientation`: Page orientation - "portrait" or "landscape" (default: "portrait")
+- `size`: Page size - "A4", "Letter", "Legal", etc. (default: "A4")
+- `margin_left`: Left margin in points (default: 72)
+- `margin_top`: Top margin in points (default: 72)
+- `margin_right`: Right margin in points (default: 72)
+- `margin_bottom`: Bottom margin in points (default: 72)
+
+**Returns:**
+- Processed PDF as bytes, or None if `output_path` provided
+
+**Example:**
+```python
+# Add one blank page at the end
+result = client.add_page("document.pdf")
+
+# Add 3 blank pages after the first page
+result = client.add_page(
+    "document.pdf",
+    page_count=3,
+    after_page_index=0
+)
+
+# Add landscape pages with custom margins
+result = client.add_page(
+    "document.pdf",
+    page_count=2,
+    orientation="landscape",
+    size="Letter",
+    margin_left=50,
+    margin_top=50,
+    margin_right=50,
+    margin_bottom=50
+)
+
+# Save to specific file
+client.add_page(
+    "document.pdf",
+    page_count=1,
+    after_page_index=2,
+    output_path="with_blank_page.pdf"
+)
+```
+
 ## Builder API
 
 The Builder API allows chaining multiple operations. Like the Direct API, it automatically converts Office documents to PDF when needed:

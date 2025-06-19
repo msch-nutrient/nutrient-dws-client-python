@@ -542,6 +542,153 @@ class DirectAPIMixin:
         else:
             return result  # type: ignore[no-any-return]
 
+    def add_page(
+        self,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+        *,
+        page_count: int = 1,
+        after_page_index: Optional[int] = None,
+        orientation: str = "portrait",
+        size: str = "A4",
+        margin_left: int = 72,
+        margin_top: int = 72,
+        margin_right: int = 72,
+        margin_bottom: int = 72,
+    ) -> Optional[bytes]:
+        """Add blank pages to a PDF document.
+
+        Inserts one or more blank pages into a PDF at the specified position.
+        If input is an Office document, it will be converted to PDF first.
+
+        Args:
+            input_file: Input PDF file or Office document.
+            output_path: Optional path to save the output file.
+            page_count: Number of blank pages to add (default: 1).
+            after_page_index: Page index after which to insert pages (0-based).
+                             If None, pages are added at the end.
+            orientation: Page orientation - "portrait" or "landscape" (default: "portrait").
+            size: Page size - "A4", "Letter", "Legal", etc. (default: "A4").
+            margin_left: Left margin in points (default: 72).
+            margin_top: Top margin in points (default: 72).
+            margin_right: Right margin in points (default: 72).
+            margin_bottom: Bottom margin in points (default: 72).
+
+        Returns:
+            Processed PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If page_count is less than 1 or after_page_index is negative.
+
+        Examples:
+            # Add one blank page at the end
+            result = client.add_page("document.pdf")
+
+            # Add 3 blank pages after the first page
+            result = client.add_page(
+                "document.pdf",
+                page_count=3,
+                after_page_index=0
+            )
+
+            # Add landscape pages with custom margins
+            result = client.add_page(
+                "document.pdf",
+                page_count=2,
+                orientation="landscape",
+                size="Letter",
+                margin_left=50,
+                margin_top=50,
+                margin_right=50,
+                margin_bottom=50
+            )
+
+            # Save to specific file
+            client.add_page(
+                "document.pdf",
+                page_count=1,
+                after_page_index=2,
+                output_path="with_blank_page.pdf"
+            )
+        """
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
+        # Validate inputs
+        if page_count < 1:
+            raise ValueError("page_count must be at least 1")
+        if after_page_index is not None and after_page_index < 0:
+            raise ValueError("after_page_index must be non-negative")
+
+        # Prepare file for upload
+        file_field, file_data = prepare_file_for_upload(input_file, "file")
+        files = {file_field: file_data}
+
+        # Build parts for the document
+        parts: List[Dict[str, Any]] = []
+
+        if after_page_index is None:
+            # Add original document first, then new pages at the end
+            parts.append({"file": "file"})
+
+            # Add new pages
+            parts.append({
+                "page": "new",
+                "pageCount": page_count,
+                "layout": {
+                    "orientation": orientation,
+                    "size": size,
+                    "margin": {
+                        "left": margin_left,
+                        "top": margin_top,
+                        "right": margin_right,
+                        "bottom": margin_bottom,
+                    },
+                },
+            })
+        else:
+            # Add pages before the insertion point
+            if after_page_index >= 0:
+                parts.append({"file": "file", "pages": {"start": 0, "end": after_page_index + 1}})
+
+            # Add new pages
+            parts.append({
+                "page": "new",
+                "pageCount": page_count,
+                "layout": {
+                    "orientation": orientation,
+                    "size": size,
+                    "margin": {
+                        "left": margin_left,
+                        "top": margin_top,
+                        "right": margin_right,
+                        "bottom": margin_bottom,
+                    },
+                },
+            })
+
+            # Add remaining pages after the insertion point
+            parts.append({"file": "file", "pages": {"start": after_page_index + 1}})
+
+        # Build instructions for adding pages
+        instructions = {"parts": parts, "actions": []}
+
+        # Make API request
+        # Type checking: at runtime, self is NutrientClient which has _http_client
+        result = self._http_client.post(  # type: ignore[attr-defined]
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result  # type: ignore[no-any-return]
+
     def merge_pdfs(
         self,
         input_files: List[FileInput],
