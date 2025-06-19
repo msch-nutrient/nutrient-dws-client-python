@@ -66,6 +66,7 @@ def test_client_has_direct_api_methods():
     assert hasattr(client, "watermark_pdf")
     assert hasattr(client, "ocr_pdf")
     assert hasattr(client, "apply_redactions")
+    assert hasattr(client, "split_pdf")
     assert hasattr(client, "merge_pdfs")
 
 

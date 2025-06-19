@@ -230,6 +230,44 @@ class DirectAPIMixin:
         """
         return self._process_file("apply-redactions", input_file, output_path)
 
+    def split_pdf(
+        self,
+        input_file: FileInput,
+        output_path: Optional[str] = None,
+        page_ranges: Optional[List[str]] = None,
+        split_type: str = "pages",
+    ) -> Optional[bytes]:
+        """Split a PDF into multiple files.
+
+        Splits a PDF document into separate files based on specified criteria.
+        If input is an Office document, it will be converted to PDF first.
+
+        Args:
+            input_file: Input file (PDF or Office document).
+            output_path: Optional path to save the output file.
+            page_ranges: List of page ranges to split (e.g., ["1-3", "4-6", "7"]).
+            split_type: Type of split operation. Options: "pages", "bookmarks".
+
+        Returns:
+            Processed file as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If invalid page ranges provided.
+
+        Example:
+            # Split by page ranges
+            client.split_pdf(
+                "document.pdf",
+                page_ranges=["1-5", "6-10", "11-15"]
+            )
+        """
+        options = {"split_type": split_type}
+        if page_ranges is not None:
+            options["page_ranges"] = page_ranges  # type: ignore
+        return self._process_file("split-pdf", input_file, output_path, **options)
+
     def merge_pdfs(
         self,
         input_files: List[FileInput],
