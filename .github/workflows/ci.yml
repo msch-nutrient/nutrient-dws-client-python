@@ -82,7 +82,11 @@ jobs:
 
     - name: Create integration config with API key
       run: |
-        echo 'API_KEY = "${{ secrets.NUTRIENT_DWS_API_KEY }}"' > tests/integration/integration_config.py
+        python -c "
+        import os
+        with open('tests/integration/integration_config.py', 'w') as f:
+            f.write(f'API_KEY = \"{os.environ[\"NUTRIENT_DWS_API_KEY\"]}\"\n')
+        "
       env:
         NUTRIENT_DWS_API_KEY: ${{ secrets.NUTRIENT_DWS_API_KEY }}
 
