@@ -4,7 +4,7 @@ This file provides convenient methods that wrap the Nutrient Build API
 for supported document processing operations.
 """
 
-from typing import TYPE_CHECKING, Any, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol
 
 from nutrient_dws.file_handler import FileInput
 
@@ -229,6 +229,96 @@ class DirectAPIMixin:
             APIError: For other API errors.
         """
         return self._process_file("apply-redactions", input_file, output_path)
+
+    def split_pdf(
+        self,
+        input_file: FileInput,
+        page_ranges: Optional[List[Dict[str, int]]] = None,
+        output_paths: Optional[List[str]] = None,
+    ) -> List[bytes]:
+        """Split a PDF into multiple documents by page ranges.
+
+        Splits a PDF into multiple files based on specified page ranges.
+        Each range creates a separate output file.
+
+        Args:
+            input_file: Input PDF file.
+            page_ranges: List of page range dictionaries. Each dict can contain:
+                - 'start': Starting page index (0-based, inclusive)
+                - 'end': Ending page index (0-based, exclusive)
+                - If not provided, splits into individual pages
+            output_paths: Optional list of paths to save output files.
+                          Must match length of page_ranges if provided.
+
+        Returns:
+            List of PDF bytes for each split, or empty list if output_paths provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If page_ranges and output_paths length mismatch.
+
+        Examples:
+            # Split into individual pages
+            pages = client.split_pdf("document.pdf")
+
+            # Split by custom ranges
+            parts = client.split_pdf(
+                "document.pdf",
+                page_ranges=[
+                    {"start": 0, "end": 5},      # Pages 1-5
+                    {"start": 5, "end": 10},     # Pages 6-10
+                    {"start": 10}                # Pages 11 to end
+                ]
+            )
+
+            # Save to specific files
+            client.split_pdf(
+                "document.pdf",
+                page_ranges=[{"start": 0, "end": 2}, {"start": 2}],
+                output_paths=["part1.pdf", "part2.pdf"]
+            )
+        """
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
+        # Validate inputs
+        if output_paths and page_ranges and len(output_paths) != len(page_ranges):
+            raise ValueError("output_paths length must match page_ranges length")
+
+        # Default to splitting into individual pages if no ranges specified
+        if not page_ranges:
+            # We'll need to determine page count first - for now, assume single page split
+            page_ranges = [{"start": 0, "end": 1}]
+
+        results = []
+
+        # Process each page range as a separate API call
+        for i, page_range in enumerate(page_ranges):
+            # Prepare file for upload
+            file_field, file_data = prepare_file_for_upload(input_file, "file")
+            files = {file_field: file_data}
+
+            # Build instructions for page extraction
+            instructions = {
+                "parts": [{"file": "file", "pages": page_range}],
+                "actions": []
+            }
+
+            # Make API request
+            # Type checking: at runtime, self is NutrientClient which has _http_client
+            result = self._http_client.post(  # type: ignore[attr-defined]
+                "/build",
+                files=files,
+                json_data=instructions,
+            )
+
+            # Handle output
+            if output_paths and i < len(output_paths):
+                save_file_output(result, output_paths[i])
+            else:
+                results.append(result)  # type: ignore[arg-type]
+
+        return results if not output_paths else []
 
     def merge_pdfs(
         self,

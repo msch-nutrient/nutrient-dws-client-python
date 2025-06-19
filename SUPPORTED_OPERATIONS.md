@@ -154,6 +154,40 @@ client.merge_pdfs(
 )
 ```
 
+### 8. `split_pdf(input_file, page_ranges=None, output_paths=None)`
+Splits a PDF into multiple documents by page ranges.
+
+**Parameters:**
+- `input_file`: PDF file to split
+- `page_ranges`: List of page range dictionaries with `start`/`end` keys (0-based indexing)
+- `output_paths`: Optional list of paths to save output files
+
+**Returns:**
+- List of PDF bytes for each split, or empty list if `output_paths` provided
+
+**Example:**
+```python
+# Split into custom ranges
+parts = client.split_pdf(
+    "document.pdf", 
+    page_ranges=[
+        {"start": 0, "end": 5},      # Pages 1-5
+        {"start": 5, "end": 10},     # Pages 6-10
+        {"start": 10}                # Pages 11 to end
+    ]
+)
+
+# Save to specific files
+client.split_pdf(
+    "document.pdf",
+    page_ranges=[{"start": 0, "end": 2}, {"start": 2}],
+    output_paths=["part1.pdf", "part2.pdf"]
+)
+
+# Default behavior (extracts first page)
+pages = client.split_pdf("document.pdf")
+```
+
 ## Builder API
 
 The Builder API allows chaining multiple operations. Like the Direct API, it automatically converts Office documents to PDF when needed:
@@ -193,7 +227,6 @@ The following operations are **NOT** currently supported by the API:
 
 - HTML to PDF conversion (only Office documents are supported)
 - PDF to image export
-- PDF splitting
 - Form filling
 - Digital signatures
 - Compression/optimization

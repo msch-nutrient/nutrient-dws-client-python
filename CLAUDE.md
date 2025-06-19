@@ -44,3 +44,38 @@ Always run the quality checks above to ensure code meets standards.
 4. Update documentation/docstrings
 5. Run quality checks before marking tasks complete
 6. Use `gh` cli tool
+
+## Implementation Patterns for New Tools
+
+### Build API Pattern (e.g., split_pdf)
+Many Nutrient DWS tools use the Build API (`/build` endpoint) rather than dedicated tool endpoints:
+
+```python
+# Pattern for Build API tools
+instructions = {
+    "parts": [{"file": "file", "pages": page_range}],  # or other part config
+    "actions": []  # or specific actions for the tool
+}
+
+result = self._http_client.post("/build", files=files, json_data=instructions)
+```
+
+### Key Learnings from split_pdf Implementation
+- **Page Ranges**: Use `{"start": 0, "end": 5}` (0-based, end exclusive) and `{"start": 10}` (to end)
+- **Multiple Operations**: Some tools require multiple API calls (one per page range/operation)
+- **Error Handling**: API returns 400 with detailed errors when parameters are invalid
+- **Testing Strategy**: Focus on integration tests with live API rather than unit test mocking
+- **File Handling**: Use `prepare_file_for_upload()` and `save_file_output()` from file_handler module
+
+### Method Template for DirectAPIMixin
+```python
+def new_tool(
+    self,
+    input_file: FileInput,
+    output_path: Optional[str] = None,
+    # tool-specific parameters with proper typing
+) -> Optional[bytes]:
+    """Tool description following existing docstring patterns."""
+    # Use _process_file for simple tools or implement Build API pattern for complex ones
+    return self._process_file("tool-name", input_file, output_path, **options)
+```
