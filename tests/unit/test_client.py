@@ -111,7 +111,7 @@ def test_set_page_label_validation():
 
     # Test invalid label config (not a dict)
     with pytest.raises(ValueError, match="Label configuration 0 must be a dictionary"):
-        client.set_page_label("test.pdf", ["invalid"])
+        client.set_page_label("test.pdf", ["invalid"])  # type: ignore[list-item]
 
     # Test missing 'pages' key
     with pytest.raises(ValueError, match="Label configuration 0 missing required 'pages' key"):
