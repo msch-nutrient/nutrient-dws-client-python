@@ -3,6 +3,8 @@
 These tests require a valid API key configured in integration_config.py.
 """
 
+from typing import Union
+
 import pytest
 
 from nutrient_dws import NutrientClient
@@ -19,7 +21,7 @@ except ImportError:
     TIMEOUT = 60
 
 
-def assert_is_pdf(file_path_or_bytes):
+def assert_is_pdf(file_path_or_bytes: Union[str, bytes]) -> None:
     """Assert that a file or bytes is a valid PDF.
 
     Args:
@@ -34,7 +36,7 @@ def assert_is_pdf(file_path_or_bytes):
 
         # Check PDF magic number
         assert content.startswith(b'%PDF-'), (
-            f"File does not start with PDF magic number, got: {content}"
+            f"File does not start with PDF magic number, got: {content!r}"
         )
     else:
         raise ValueError("Input must be file path string or bytes")
