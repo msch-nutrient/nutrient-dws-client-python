@@ -21,7 +21,7 @@ except ImportError:
 
 def assert_is_pdf(file_path_or_bytes):
     """Assert that a file or bytes is a valid PDF.
-    
+
     Args:
         file_path_or_bytes: Path to file or bytes content to check.
     """
@@ -31,9 +31,11 @@ def assert_is_pdf(file_path_or_bytes):
                 content = f.read(8)
         else:
             content = file_path_or_bytes[:8]
-        
+
         # Check PDF magic number
-        assert content.startswith(b'%PDF-'), f"File does not start with PDF magic number, got: {content}"
+        assert content.startswith(b'%PDF-'), (
+            f"File does not start with PDF magic number, got: {content}"
+        )
     else:
         raise ValueError("Input must be file path string or bytes")
 
@@ -111,7 +113,7 @@ class TestLiveAPI:
         assert len(result) == 2  # Should return exactly 2 parts since sample has multiple pages
         assert all(isinstance(pdf_bytes, bytes) for pdf_bytes in result)
         assert all(len(pdf_bytes) > 0 for pdf_bytes in result)
-        
+
         # Verify both results are valid PDFs
         for pdf_bytes in result:
             assert_is_pdf(pdf_bytes)
@@ -157,6 +159,6 @@ class TestLiveAPI:
         assert len(result) == 1
         assert isinstance(result[0], bytes)
         assert len(result[0]) > 0
-        
+
         # Verify result is a valid PDF
         assert_is_pdf(result[0])
