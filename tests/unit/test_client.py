@@ -70,6 +70,8 @@ def test_client_has_direct_api_methods():
     assert hasattr(client, "split_pdf")
     assert hasattr(client, "duplicate_pdf_pages")
     assert hasattr(client, "delete_pdf_pages")
+    assert hasattr(client, "add_page")
+    assert hasattr(client, "set_page_label")
 
 
 def test_client_context_manager():
@@ -92,3 +94,111 @@ def test_client_close():
 
     # Close should not raise an error
     client.close()
+
+
+def test_set_page_label_validation():
+    """Test set_page_label method validation logic."""
+    from unittest.mock import Mock
+
+    import pytest
+
+    client = NutrientClient(api_key="test-key")
+    client._http_client = Mock()  # Mock the HTTP client to avoid actual API calls
+
+    # Test empty labels list
+    with pytest.raises(ValueError, match="labels list cannot be empty"):
+        client.set_page_label("test.pdf", [])
+
+    # Test invalid label config (not a dict)
+    with pytest.raises(ValueError, match="Label configuration 0 must be a dictionary"):
+        client.set_page_label("test.pdf", ["invalid"])
+
+    # Test missing 'pages' key
+    with pytest.raises(ValueError, match="Label configuration 0 missing required 'pages' key"):
+        client.set_page_label("test.pdf", [{"label": "Test"}])
+
+    # Test missing 'label' key
+    with pytest.raises(ValueError, match="Label configuration 0 missing required 'label' key"):
+        client.set_page_label("test.pdf", [{"pages": {"start": 0}}])
+
+    # Test invalid pages config (not a dict)
+    with pytest.raises(
+        ValueError, match="Label configuration 0 'pages' must be a dict with 'start' key"
+    ):
+        client.set_page_label("test.pdf", [{"pages": "invalid", "label": "Test"}])
+
+    # Test missing 'start' key in pages
+    with pytest.raises(
+        ValueError, match="Label configuration 0 'pages' must be a dict with 'start' key"
+    ):
+        client.set_page_label("test.pdf", [{"pages": {"end": 5}, "label": "Test"}])
+
+
+def test_set_page_label_valid_config():
+    """Test set_page_label with valid configuration."""
+    from unittest.mock import Mock, patch
+
+    client = NutrientClient(api_key="test-key")
+
+    # Mock HTTP client and file handler functions
+    mock_http_client = Mock()
+    mock_http_client.post.return_value = b"mock_pdf_bytes"
+    client._http_client = mock_http_client
+
+    with (
+        patch("nutrient_dws.file_handler.prepare_file_for_upload") as mock_prepare,
+        patch("nutrient_dws.file_handler.save_file_output") as mock_save,
+    ):
+        mock_prepare.return_value = ("file", ("filename.pdf", b"mock_file_data", "application/pdf"))
+
+        # Test valid configuration
+        labels = [
+            {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+            {"pages": {"start": 3}, "label": "Content"},
+        ]
+
+        result = client.set_page_label("test.pdf", labels)
+
+        # Verify the API call was made with correct parameters
+        mock_http_client.post.assert_called_once_with(
+            "/build",
+            files={"file": ("filename.pdf", b"mock_file_data", "application/pdf")},
+            json_data={"parts": [{"file": "file"}], "actions": [], "output": {"labels": labels}},
+        )
+
+        # Verify result
+        assert result == b"mock_pdf_bytes"
+
+        # Verify save_file_output was not called (no output_path)
+        mock_save.assert_not_called()
+
+
+def test_set_page_label_with_output_path():
+    """Test set_page_label with output path."""
+    from unittest.mock import Mock, patch
+
+    client = NutrientClient(api_key="test-key")
+
+    # Mock HTTP client and file handler functions
+    mock_http_client = Mock()
+    mock_http_client.post.return_value = b"mock_pdf_bytes"
+    client._http_client = mock_http_client
+
+    with (
+        patch("nutrient_dws.file_handler.prepare_file_for_upload") as mock_prepare,
+        patch("nutrient_dws.file_handler.save_file_output") as mock_save,
+    ):
+        mock_prepare.return_value = ("file", ("filename.pdf", b"mock_file_data", "application/pdf"))
+
+        labels = [{"pages": {"start": 0, "end": 1}, "label": "Cover"}]
+
+        result = client.set_page_label("test.pdf", labels, output_path="/path/to/output.pdf")
+
+        # Verify the API call was made
+        mock_http_client.post.assert_called_once()
+
+        # Verify save_file_output was called with correct parameters
+        mock_save.assert_called_once_with(b"mock_pdf_bytes", "/path/to/output.pdf")
+
+        # Verify result is None when output_path is provided
+        assert result is None

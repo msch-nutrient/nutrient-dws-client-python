@@ -48,6 +48,40 @@ def test_builder_set_output_options():
     assert builder._output_options["optimize"] is True
 
 
+def test_builder_set_page_labels():
+    """Test setting page labels."""
+    builder = BuildAPIWrapper(None, "test.pdf")
+
+    labels = [
+        {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+        {"pages": {"start": 3, "end": 10}, "label": "Chapter 1"},
+        {"pages": {"start": 10}, "label": "Appendix"},
+    ]
+
+    result = builder.set_page_labels(labels)
+
+    assert result is builder  # Should return self for chaining
+    assert builder._output_options["labels"] == labels
+
+
+def test_builder_set_page_labels_chaining():
+    """Test page labels can be chained with other operations."""
+    builder = BuildAPIWrapper(None, "test.pdf")
+
+    labels = [{"pages": {"start": 0, "end": 1}, "label": "Cover"}]
+
+    result = (
+        builder.add_step("rotate-pages", options={"degrees": 90})
+        .set_page_labels(labels)
+        .set_output_options(metadata={"title": "Test"})
+    )
+
+    assert result is builder
+    assert len(builder._actions) == 1
+    assert builder._output_options["labels"] == labels
+    assert builder._output_options["metadata"]["title"] == "Test"
+
+
 def test_builder_execute_requires_client():
     """Test that execute requires a client."""
     builder = BuildAPIWrapper(None, "test.pdf")

@@ -723,3 +723,106 @@ class DirectAPIMixin:
             return None
         else:
             return result  # type: ignore[no-any-return]
+
+    def set_page_label(
+        self,
+        input_file: FileInput,
+        labels: list[dict[str, Any]],
+        output_path: str | None = None,
+    ) -> bytes | None:
+        """Set labels for specific pages in a PDF.
+
+        Assigns custom labels/numbering to specific page ranges in a PDF document.
+        Each label configuration specifies a page range and the label text to apply.
+
+        Args:
+            input_file: Input PDF file.
+            labels: List of label configurations. Each dict must contain:
+                   - 'pages': Page range dict with 'start' (required) and optionally 'end'
+                   - 'label': String label to apply to those pages
+                   Page ranges use 0-based indexing where 'end' is exclusive.
+            output_path: Optional path to save the output file.
+
+        Returns:
+            Processed PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If labels list is empty or contains invalid configurations.
+
+        Examples:
+            # Set labels for different page ranges
+            client.set_page_label(
+                "document.pdf",
+                labels=[
+                    {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+                    {"pages": {"start": 3, "end": 10}, "label": "Chapter 1"},
+                    {"pages": {"start": 10}, "label": "Appendix"}
+                ],
+                output_path="labeled_document.pdf"
+            )
+
+            # Set label for single page
+            client.set_page_label(
+                "document.pdf",
+                labels=[{"pages": {"start": 0, "end": 1}, "label": "Cover Page"}]
+            )
+        """
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
+        # Validate inputs
+        if not labels:
+            raise ValueError("labels list cannot be empty")
+
+        # Normalize labels to ensure proper format
+        normalized_labels = []
+        for i, label_config in enumerate(labels):
+            if not isinstance(label_config, dict):
+                raise ValueError(f"Label configuration {i} must be a dictionary")
+
+            if "pages" not in label_config:
+                raise ValueError(f"Label configuration {i} missing required 'pages' key")
+
+            if "label" not in label_config:
+                raise ValueError(f"Label configuration {i} missing required 'label' key")
+
+            pages = label_config["pages"]
+            if not isinstance(pages, dict) or "start" not in pages:
+                raise ValueError(f"Label configuration {i} 'pages' must be a dict with 'start' key")
+
+            # Normalize pages to ensure 'end' is present
+            normalized_pages = {"start": pages["start"]}
+            if "end" in pages:
+                normalized_pages["end"] = pages["end"]
+            else:
+                # If no end is specified, use -1 to indicate "to end of document"
+                normalized_pages["end"] = -1
+
+            normalized_labels.append({"pages": normalized_pages, "label": label_config["label"]})
+
+        # Prepare file for upload
+        file_field, file_data = prepare_file_for_upload(input_file, "file")
+        files = {file_field: file_data}
+
+        # Build instructions with page labels in output configuration
+        instructions = {
+            "parts": [{"file": "file"}],
+            "actions": [],
+            "output": {"labels": normalized_labels},
+        }
+
+        # Make API request
+        # Type checking: at runtime, self is NutrientClient which has _http_client
+        result = self._http_client.post(  # type: ignore[attr-defined]
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result  # type: ignore[no-any-return]

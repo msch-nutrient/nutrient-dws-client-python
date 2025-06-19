@@ -78,6 +78,30 @@ class BuildAPIWrapper:
         self._output_options.update(options)
         return self
 
+    def set_page_labels(self, labels: list[dict[str, Any]]) -> "BuildAPIWrapper":
+        """Set page labels for the final document.
+
+        Assigns custom labels/numbering to specific page ranges in the output PDF.
+
+        Args:
+            labels: List of label configurations. Each dict must contain:
+                   - 'pages': Page range dict with 'start' (required) and optionally 'end'
+                   - 'label': String label to apply to those pages
+                   Page ranges use 0-based indexing where 'end' is exclusive.
+
+        Returns:
+            Self for method chaining.
+
+        Example:
+            >>> builder.set_page_labels([
+        ...     {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+        ...     {"pages": {"start": 3, "end": 10}, "label": "Chapter 1"},
+        ...     {"pages": {"start": 10}, "label": "Appendix"}
+        ... ])
+        """
+        self._output_options["labels"] = labels
+        return self
+
     def execute(self, output_path: str | None = None) -> bytes | None:
         """Execute the workflow.
 
