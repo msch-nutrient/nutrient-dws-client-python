@@ -351,8 +351,8 @@ class TestLiveAPI:
 
     def test_add_page_at_end(self, client, sample_pdf_path):
         """Test add_page method inserting at the end."""
-        # Test inserting at end (sample PDF has 6 pages, so insert after page 5)
-        result = client.add_page(sample_pdf_path, insert_after_page=5, page_count=1)
+        # Test inserting at end (sample PDF has 6 pages, so insert after page 4)
+        result = client.add_page(sample_pdf_path, insert_after_page=4, page_count=1)
 
         assert isinstance(result, bytes)
         assert len(result) > 0

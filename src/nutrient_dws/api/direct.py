@@ -687,10 +687,10 @@ class DirectAPIMixin:
             parts.append(new_page_part)
             parts.append({"file": "file"})
         else:
-            # Insert after a specific page: 
+            # Insert after a specific page:
             # First add pages from start to insertion point (inclusive)
             parts.append({"file": "file", "pages": {"start": 0, "end": insert_after_page + 1}})
-            
+
             # Add new blank pages
             new_page_part = {
                 "page": "new",
@@ -701,7 +701,7 @@ class DirectAPIMixin:
                 },
             }
             parts.append(new_page_part)
-            
+
             # Add remaining pages after insertion point (if any)
             # Only add this part if there are pages after the insertion point
             parts.append({"file": "file", "pages": {"start": insert_after_page + 1}})
