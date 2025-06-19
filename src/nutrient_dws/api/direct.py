@@ -4,7 +4,7 @@ This file provides convenient methods that wrap the Nutrient Build API
 for supported document processing operations.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Protocol, cast
 
 from nutrient_dws.file_handler import FileInput
 
@@ -633,7 +633,7 @@ class DirectAPIMixin:
             parts.append({"file": "file"})
 
             # Add new pages
-            parts.append({  # type: ignore[dict-item]
+            new_page_part = cast(Dict[str, Any], {
                 "page": "new",
                 "pageCount": page_count,
                 "layout": {
@@ -647,13 +647,14 @@ class DirectAPIMixin:
                     },
                 },
             })
+            parts.append(new_page_part)
         else:
             # Add pages before the insertion point
             if after_page_index >= 0:
                 parts.append({"file": "file", "pages": {"start": 0, "end": after_page_index + 1}})  # type: ignore[dict-item]
 
             # Add new pages
-            parts.append({  # type: ignore[dict-item]
+            new_page_part = cast(Dict[str, Any], {
                 "page": "new",
                 "pageCount": page_count,
                 "layout": {
@@ -667,12 +668,13 @@ class DirectAPIMixin:
                     },
                 },
             })
+            parts.append(new_page_part)
 
             # Add remaining pages after the insertion point
             parts.append({"file": "file", "pages": {"start": after_page_index + 1}})  # type: ignore[dict-item]
 
         # Build instructions for adding pages
-        instructions = {"parts": parts, "actions": []}
+        instructions = {"parts": parts, "actions": []}  # type: ignore[misc]
 
         # Make API request
         # Type checking: at runtime, self is NutrientClient which has _http_client
