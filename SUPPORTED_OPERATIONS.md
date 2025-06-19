@@ -256,6 +256,40 @@ client.delete_pdf_pages(
 )
 ```
 
+### 11. `set_page_label(input_file, labels, output_path=None)`
+Sets custom labels/numbering for specific page ranges in a PDF.
+
+**Parameters:**
+- `input_file`: PDF file to process
+- `labels`: List of label configurations. Each dict must contain:
+  - `pages`: Page range dict with `start` (required) and optionally `end`
+  - `label`: String label to apply to those pages
+  - Page ranges use 0-based indexing where `end` is exclusive.
+- `output_path`: Optional path to save the output file
+
+**Returns:**
+- Processed PDF as bytes, or None if `output_path` provided
+
+**Example:**
+```python
+# Set labels for different page ranges
+client.set_page_label(
+    "document.pdf",
+    labels=[
+        {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+        {"pages": {"start": 3, "end": 10}, "label": "Chapter 1"},
+        {"pages": {"start": 10}, "label": "Appendix"}
+    ],
+    output_path="labeled_document.pdf"
+)
+
+# Set label for single page
+client.set_page_label(
+    "document.pdf",
+    labels=[{"pages": {"start": 0, "end": 1}, "label": "Cover Page"}]
+)
+```
+
 ## Builder API
 
 The Builder API allows chaining multiple operations. Like the Direct API, it automatically converts Office documents to PDF when needed:
@@ -279,6 +313,15 @@ client.build(input_file="report.docx") \
     .add_step("watermark-pdf", {"text": "CONFIDENTIAL", "width": 300, "height": 150}) \
     .add_step("flatten-annotations") \
     .execute(output_path="watermarked_report.pdf")
+
+# Setting page labels with Builder API
+client.build(input_file="document.pdf") \
+    .add_step("rotate-pages", {"degrees": 90}) \
+    .set_page_labels([
+        {"pages": {"start": 0, "end": 3}, "label": "Introduction"},
+        {"pages": {"start": 3}, "label": "Content"}
+    ]) \
+    .execute(output_path="labeled_document.pdf")
 ```
 
 ### Supported Builder Actions
@@ -288,6 +331,22 @@ client.build(input_file="report.docx") \
 3. **ocr-pdf** - Parameters: `language`
 4. **watermark-pdf** - Parameters: `text` or `image_url`, `width`, `height`, `opacity`, `position`
 5. **apply-redactions** - No parameters required
+
+### Builder Output Options
+
+The Builder API also supports setting output options:
+
+- **set_output_options()** - General output configuration (metadata, optimization, etc.)
+- **set_page_labels()** - Set page labels for specific page ranges
+
+Example:
+```python
+client.build("document.pdf") \
+    .add_step("rotate-pages", {"degrees": 90}) \
+    .set_output_options(metadata={"title": "My Document"}) \
+    .set_page_labels([{"pages": {"start": 0}, "label": "Chapter 1"}]) \
+    .execute("output.pdf")
+```
 
 ## API Limitations
 

@@ -3,6 +3,8 @@
 These tests require a valid API key configured in integration_config.py.
 """
 
+from __future__ import annotations
+
 import pytest
 
 from nutrient_dws import NutrientClient
@@ -10,9 +12,9 @@ from nutrient_dws import NutrientClient
 try:
     from . import integration_config  # type: ignore[attr-defined]
 
-    API_KEY = integration_config.API_KEY
-    BASE_URL = getattr(integration_config, "BASE_URL", None)
-    TIMEOUT = getattr(integration_config, "TIMEOUT", 60)
+    API_KEY: str | None = integration_config.API_KEY
+    BASE_URL: str | None = getattr(integration_config, "BASE_URL", None)
+    TIMEOUT: int = getattr(integration_config, "TIMEOUT", 60)
 except ImportError:
     API_KEY = None
     BASE_URL = None
@@ -157,6 +159,74 @@ class TestLiveAPI:
 
         # Verify result is a valid PDF
         assert_is_pdf(result[0])
+
+    def test_set_page_label_integration(self, client, sample_pdf_path, tmp_path):
+        """Test set_page_label method with live API."""
+        labels = [{"pages": {"start": 0, "end": 1}, "label": "Cover"}]
+
+        output_path = str(tmp_path / "labeled.pdf")
+
+        # Try to set page labels
+        result = client.set_page_label(sample_pdf_path, labels, output_path=output_path)
+
+        # If successful, verify output
+        assert result is None  # Should return None when output_path provided
+        assert (tmp_path / "labeled.pdf").exists()
+        assert_is_pdf(output_path)
+
+    def test_set_page_label_return_bytes(self, client, sample_pdf_path):
+        """Test set_page_label method returning bytes."""
+        labels = [{"pages": {"start": 0, "end": 1}, "label": "i"}]
+
+        # Test getting bytes back
+        result = client.set_page_label(sample_pdf_path, labels)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        assert_is_pdf(result)
+
+    def test_set_page_label_multiple_ranges(self, client, sample_pdf_path):
+        """Test set_page_label method with multiple page ranges."""
+        labels = [
+            {"pages": {"start": 0, "end": 1}, "label": "i"},
+            {"pages": {"start": 1, "end": 2}, "label": "intro"},
+            {"pages": {"start": 2, "end": 3}, "label": "final"},
+        ]
+
+        result = client.set_page_label(sample_pdf_path, labels)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        assert_is_pdf(result)
+
+    def test_set_page_label_single_page(self, client, sample_pdf_path):
+        """Test set_page_label method with single page label."""
+        labels = [{"pages": {"start": 0, "end": 1}, "label": "Cover Page"}]
+
+        result = client.set_page_label(sample_pdf_path, labels)
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+        assert_is_pdf(result)
+
+    def test_set_page_label_empty_labels_error(self, client, sample_pdf_path):
+        """Test set_page_label method with empty labels raises error."""
+        with pytest.raises(ValueError, match="labels list cannot be empty"):
+            client.set_page_label(sample_pdf_path, labels=[])
+
+    def test_set_page_label_invalid_label_config_error(self, client, sample_pdf_path):
+        """Test set_page_label method with invalid label configuration raises error."""
+        # Missing 'pages' key
+        with pytest.raises(ValueError, match="missing required 'pages' key"):
+            client.set_page_label(sample_pdf_path, labels=[{"label": "test"}])
+
+        # Missing 'label' key
+        with pytest.raises(ValueError, match="missing required 'label' key"):
+            client.set_page_label(sample_pdf_path, labels=[{"pages": {"start": 0}}])
+
+        # Invalid pages format
+        with pytest.raises(ValueError, match="'pages' must be a dict with 'start' key"):
+            client.set_page_label(sample_pdf_path, labels=[{"pages": "invalid", "label": "test"}])
 
     def test_duplicate_pdf_pages_basic(self, client, sample_pdf_path):
         """Test duplicate_pdf_pages method with basic duplication."""
