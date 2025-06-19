@@ -159,3 +159,58 @@ class TestLiveAPI:
 
         # Verify result is a valid PDF
         assert_is_pdf(result[0])
+
+    def test_duplicate_pdf_pages_basic(self, client, sample_pdf_path):
+        """Test duplicate_pdf_pages method with basic duplication."""
+        # Test duplicating first page twice
+        result = client.duplicate_pdf_pages(sample_pdf_path, page_indexes=[0, 0])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_duplicate_pdf_pages_reorder(self, client, sample_pdf_path):
+        """Test duplicate_pdf_pages method with page reordering."""
+        # Test reordering pages (assumes sample PDF has at least 2 pages)
+        result = client.duplicate_pdf_pages(sample_pdf_path, page_indexes=[1, 0])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_duplicate_pdf_pages_with_output_file(self, client, sample_pdf_path, tmp_path):
+        """Test duplicate_pdf_pages method saving to output file."""
+        output_path = str(tmp_path / "duplicated.pdf")
+
+        # Test duplicating and saving to file
+        result = client.duplicate_pdf_pages(
+            sample_pdf_path, page_indexes=[0, 0, 1], output_path=output_path
+        )
+
+        # Should return None when saving to file
+        assert result is None
+
+        # Check that output file was created
+        assert (tmp_path / "duplicated.pdf").exists()
+        assert (tmp_path / "duplicated.pdf").stat().st_size > 0
+        assert_is_pdf(output_path)
+
+    def test_duplicate_pdf_pages_negative_indexes(self, client, sample_pdf_path):
+        """Test duplicate_pdf_pages method with negative indexes."""
+        # Test using negative indexes (last page)
+        result = client.duplicate_pdf_pages(sample_pdf_path, page_indexes=[-1, 0, -1])
+
+        assert isinstance(result, bytes)
+        assert len(result) > 0
+
+        # Verify result is a valid PDF
+        assert_is_pdf(result)
+
+    def test_duplicate_pdf_pages_empty_indexes_error(self, client, sample_pdf_path):
+        """Test duplicate_pdf_pages method with empty page_indexes raises error."""
+        with pytest.raises(ValueError, match="page_indexes cannot be empty"):
+            client.duplicate_pdf_pages(sample_pdf_path, page_indexes=[])

@@ -317,6 +317,90 @@ class DirectAPIMixin:
 
         return results if not output_paths else []
 
+    def duplicate_pdf_pages(
+        self,
+        input_file: FileInput,
+        page_indexes: List[int],
+        output_path: Optional[str] = None,
+    ) -> Optional[bytes]:
+        """Duplicate specific pages within a PDF document.
+
+        Creates a new PDF containing the specified pages in the order provided.
+        Pages can be duplicated multiple times by including their index multiple times.
+
+        Args:
+            input_file: Input PDF file.
+            page_indexes: List of page indexes to include (0-based).
+                         Pages can be repeated to create duplicates.
+                         Negative indexes are supported (-1 for last page).
+            output_path: Optional path to save the output file.
+
+        Returns:
+            Processed PDF as bytes, or None if output_path is provided.
+
+        Raises:
+            AuthenticationError: If API key is missing or invalid.
+            APIError: For other API errors.
+            ValueError: If page_indexes is empty.
+
+        Examples:
+            # Duplicate first page twice, then include second page
+            result = client.duplicate_pdf_pages(
+                "document.pdf",
+                page_indexes=[0, 0, 1]  # Page 1, Page 1, Page 2
+            )
+
+            # Include last page at beginning and end
+            result = client.duplicate_pdf_pages(
+                "document.pdf",
+                page_indexes=[-1, 0, 1, 2, -1]  # Last, First, Second, Third, Last
+            )
+
+            # Save to specific file
+            client.duplicate_pdf_pages(
+                "document.pdf",
+                page_indexes=[0, 2, 1],  # Reorder: Page 1, Page 3, Page 2
+                output_path="reordered.pdf"
+            )
+        """
+        from nutrient_dws.file_handler import prepare_file_for_upload, save_file_output
+
+        # Validate inputs
+        if not page_indexes:
+            raise ValueError("page_indexes cannot be empty")
+
+        # Prepare file for upload
+        file_field, file_data = prepare_file_for_upload(input_file, "file")
+        files = {file_field: file_data}
+
+        # Build parts for each page index
+        parts = []
+        for page_index in page_indexes:
+            if page_index < 0:
+                # For negative indexes, use the index directly (API supports negative indexes)
+                parts.append({"file": "file", "pages": {"start": page_index, "end": page_index}})
+            else:
+                # For positive indexes, create single-page range
+                parts.append({"file": "file", "pages": {"start": page_index, "end": page_index}})
+
+        # Build instructions for duplication
+        instructions = {"parts": parts, "actions": []}
+
+        # Make API request
+        # Type checking: at runtime, self is NutrientClient which has _http_client
+        result = self._http_client.post(  # type: ignore[attr-defined]
+            "/build",
+            files=files,
+            json_data=instructions,
+        )
+
+        # Handle output
+        if output_path:
+            save_file_output(result, output_path)
+            return None
+        else:
+            return result  # type: ignore[no-any-return]
+
     def merge_pdfs(
         self,
         input_files: List[FileInput],

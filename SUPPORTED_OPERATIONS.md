@@ -188,6 +188,39 @@ client.split_pdf(
 pages = client.split_pdf("document.pdf")
 ```
 
+### 9. `duplicate_pdf_pages(input_file, page_indexes, output_path=None)`
+Duplicates specific pages within a PDF document.
+
+**Parameters:**
+- `input_file`: PDF file to process
+- `page_indexes`: List of page indexes to include (0-based). Pages can be repeated for duplication. Negative indexes supported (-1 for last page)
+- `output_path`: Optional path to save the output file
+
+**Returns:**
+- Processed PDF as bytes, or None if `output_path` provided
+
+**Example:**
+```python
+# Duplicate first page twice, then include second page
+result = client.duplicate_pdf_pages(
+    "document.pdf", 
+    page_indexes=[0, 0, 1]  # Page 1, Page 1, Page 2
+)
+
+# Include last page at beginning and end
+result = client.duplicate_pdf_pages(
+    "document.pdf",
+    page_indexes=[-1, 0, 1, 2, -1]  # Last, First, Second, Third, Last
+)
+
+# Save to specific file
+client.duplicate_pdf_pages(
+    "document.pdf",
+    page_indexes=[0, 2, 1],  # Reorder: Page 1, Page 3, Page 2
+    output_path="reordered.pdf"
+)
+```
+
 ## Builder API
 
 The Builder API allows chaining multiple operations. Like the Direct API, it automatically converts Office documents to PDF when needed:
