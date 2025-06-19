@@ -623,8 +623,8 @@ class DirectAPIMixin:
         Args:
             input_file: Input PDF file.
             insert_after_page: Page index to insert after (0-based).
-                              Use -1 to insert at the beginning.
-                              For end insertion, use the last page index (page count - 1).
+                              Use -1 to insert at the end of the document.
+                              Use a page index to insert after that specific page.
             page_count: Number of blank pages to add (default: 1).
             page_size: Page size for new pages. Common values: "A4", "Letter",
                       "Legal", "A3", "A5" (default: "A4").
@@ -638,25 +638,26 @@ class DirectAPIMixin:
         Raises:
             AuthenticationError: If API key is missing or invalid.
             APIError: For other API errors.
-            ValueError: If page_count is less than 1.
+            ValueError: If page_count is less than 1 or if insert_after_page is
+                       a negative number other than -1.
 
         Examples:
             # Add a single blank page after page 2
             result = client.add_page("document.pdf", insert_after_page=2)
 
-            # Add multiple pages at the beginning
+            # Add multiple pages at the end
             result = client.add_page(
                 "document.pdf",
-                insert_after_page=-1,  # Insert at beginning
+                insert_after_page=-1,  # Insert at end
                 page_count=3,
                 page_size="Letter",
                 orientation="landscape"
             )
 
-            # Add pages at the end and save to file
+            # Add pages after first page and save to file
             client.add_page(
                 "document.pdf",
-                insert_after_page=5,  # Insert after last page (for 6-page doc)
+                insert_after_page=0,  # Insert after first page
                 page_count=2,
                 output_path="with_blank_pages.pdf"
             )
@@ -666,6 +667,8 @@ class DirectAPIMixin:
         # Validate inputs
         if page_count < 1:
             raise ValueError("page_count must be at least 1")
+        if insert_after_page < -1:
+            raise ValueError("insert_after_page must be -1 (for end) or a non-negative page index")
 
         # Prepare file for upload
         file_field, file_data = prepare_file_for_upload(input_file, "file")
@@ -675,7 +678,8 @@ class DirectAPIMixin:
         parts: list[dict[str, Any]] = []
 
         if insert_after_page == -1:
-            # Insert at beginning: add new pages first, then all original pages
+            # Insert at end: add all original pages first, then new pages
+            parts.append({"file": "file"})
             new_page_part = {
                 "page": "new",
                 "pageCount": page_count,
@@ -685,7 +689,6 @@ class DirectAPIMixin:
                 },
             }
             parts.append(new_page_part)
-            parts.append({"file": "file"})
         else:
             # Insert after a specific page:
             # First add pages from start to insertion point (inclusive)

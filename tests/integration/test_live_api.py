@@ -408,9 +408,9 @@ class TestLiveAPI:
         # Verify result is a valid PDF
         assert_is_pdf(result)
 
-    def test_add_page_at_beginning(self, client, sample_pdf_path):
-        """Test add_page method inserting at the beginning."""
-        # Test inserting at beginning using -1
+    def test_add_page_at_end(self, client, sample_pdf_path):
+        """Test add_page method inserting at the end."""
+        # Test inserting at end using -1
         result = client.add_page(sample_pdf_path, insert_after_page=-1, page_count=2)
 
         assert isinstance(result, bytes)
@@ -419,10 +419,10 @@ class TestLiveAPI:
         # Verify result is a valid PDF
         assert_is_pdf(result)
 
-    def test_add_page_at_end(self, client, sample_pdf_path):
-        """Test add_page method inserting at the end."""
-        # Test inserting at end (sample PDF has 6 pages, so insert after page 4)
-        result = client.add_page(sample_pdf_path, insert_after_page=4, page_count=1)
+    def test_add_page_after_specific_page(self, client, sample_pdf_path):
+        """Test add_page method inserting after a specific page."""
+        # Test inserting after page 2 (third page)
+        result = client.add_page(sample_pdf_path, insert_after_page=2, page_count=1)
 
         assert isinstance(result, bytes)
         assert len(result) > 0
@@ -485,3 +485,12 @@ class TestLiveAPI:
         # Test negative page count
         with pytest.raises(ValueError, match="page_count must be at least 1"):
             client.add_page(sample_pdf_path, insert_after_page=0, page_count=-1)
+
+    def test_add_page_invalid_position_error(self, client, sample_pdf_path):
+        """Test add_page method with invalid insert_after_page raises error."""
+        # Test invalid negative position (anything below -1)
+        with pytest.raises(ValueError, match="insert_after_page must be -1"):
+            client.add_page(sample_pdf_path, insert_after_page=-2, page_count=1)
+
+        with pytest.raises(ValueError, match="insert_after_page must be -1"):
+            client.add_page(sample_pdf_path, insert_after_page=-5, page_count=1)
