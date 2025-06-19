@@ -3,6 +3,8 @@
 These tests require a valid API key configured in integration_config.py.
 """
 
+from __future__ import annotations
+
 import pytest
 
 from nutrient_dws import NutrientClient
