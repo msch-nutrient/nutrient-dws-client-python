@@ -8,6 +8,8 @@ Building a Python client library for the Nutrient Document Web Services (DWS) AP
 1. **Direct API**: Static methods on `NutrientClient` for single operations
 2. **Builder API**: Fluent, chainable interface for multi-step workflows
 
+**Python Version**: Target Python 3.10+ and leverage type hints to their full extent for better developer experience and code quality.
+
 ## Key Implementation Guidelines
 
 ### Architecture
@@ -43,7 +45,9 @@ Always run the quality checks above to ensure code meets standards.
 3. Write tests alongside implementation
 4. Update documentation/docstrings
 5. Run quality checks before marking tasks complete
-6. Use `gh` cli tool
+6. Use `gh` cli tool for GitHub operations
+
+**PR Strategy**: All GitHub PRs are squash merged to maintain clean commit history.
 
 ## Implementation Patterns for New Tools
 
