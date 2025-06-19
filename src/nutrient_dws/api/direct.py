@@ -624,7 +624,7 @@ class DirectAPIMixin:
             input_file: Input PDF file.
             insert_after_page: Page index to insert after (0-based).
                               Use -1 to insert at the beginning.
-                              Use a large number to insert at the end.
+                              For end insertion, use the last page index (page count - 1).
             page_count: Number of blank pages to add (default: 1).
             page_size: Page size for new pages. Common values: "A4", "Letter",
                       "Legal", "A3", "A5" (default: "A4").
@@ -656,7 +656,7 @@ class DirectAPIMixin:
             # Add pages at the end and save to file
             client.add_page(
                 "document.pdf",
-                insert_after_page=999,  # Insert at end
+                insert_after_page=5,  # Insert after last page (for 6-page doc)
                 page_count=2,
                 output_path="with_blank_pages.pdf"
             )
@@ -674,29 +674,37 @@ class DirectAPIMixin:
         # Build parts array
         parts: list[dict[str, Any]] = []
 
-        # Add existing document pages before insertion point
-        if insert_after_page >= 0:
-            # Add pages from start to insertion point (inclusive)
-            parts.append({"file": "file", "pages": {"start": 0, "end": insert_after_page + 1}})
-
-        # Add new blank pages
-        new_page_part = {
-            "page": "new",
-            "pageCount": page_count,
-            "layout": {
-                "size": page_size,
-                "orientation": orientation,
-            },
-        }
-        parts.append(new_page_part)
-
-        # Add remaining pages after insertion point
-        if insert_after_page >= 0:
-            # Add pages from after insertion point to end
-            parts.append({"file": "file", "pages": {"start": insert_after_page + 1}})
-        else:
-            # If inserting at beginning (insert_after_page = -1), add all original pages
+        if insert_after_page == -1:
+            # Insert at beginning: add new pages first, then all original pages
+            new_page_part = {
+                "page": "new",
+                "pageCount": page_count,
+                "layout": {
+                    "size": page_size,
+                    "orientation": orientation,
+                },
+            }
+            parts.append(new_page_part)
             parts.append({"file": "file"})
+        else:
+            # Insert after a specific page: 
+            # First add pages from start to insertion point (inclusive)
+            parts.append({"file": "file", "pages": {"start": 0, "end": insert_after_page + 1}})
+            
+            # Add new blank pages
+            new_page_part = {
+                "page": "new",
+                "pageCount": page_count,
+                "layout": {
+                    "size": page_size,
+                    "orientation": orientation,
+                },
+            }
+            parts.append(new_page_part)
+            
+            # Add remaining pages after insertion point (if any)
+            # Only add this part if there are pages after the insertion point
+            parts.append({"file": "file", "pages": {"start": insert_after_page + 1}})
 
         # Build instructions for adding pages
         instructions = {"parts": parts, "actions": []}
